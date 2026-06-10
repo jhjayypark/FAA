@@ -27,6 +27,8 @@ export const COMMON = {
   "common.settings.language.en": { en: "English", ko: "English" },
   "common.settings.language.ko": { en: "한국어", ko: "한국어" },
   "common.settings.done": { en: "Done", ko: "완료" },
+  "common.map.openExternal": { en: "Open in Google Maps", ko: "Google 지도에서 열기" },
+  "common.map.showOnMap": { en: "Show {name} on the map", ko: "{name} 지도 보기" },
   "common.cancel": { en: "Cancel", ko: "취소" },
   "common.save": { en: "Save", ko: "저장" },
   "common.edit": { en: "Edit", ko: "편집" },

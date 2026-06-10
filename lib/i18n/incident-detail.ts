@@ -39,7 +39,7 @@ export const INCIDENT_DETAIL = {
     en: "Add interview date, related person, timeline note, or incident detail...",
     ko: "인터뷰 일정, 관련 인물, 타임라인 메모, 사건 세부 내용을 입력하세요...",
   },
-  "incidentDetail.form.dateTime": { en: "Date and time", ko: "날짜 및 시간" },
+  "incidentDetail.form.dateTime": { en: "Date", ko: "날짜" },
   "incidentDetail.form.people": { en: "People", ko: "관련 인물" },
   "incidentDetail.form.peopleHelp": {
     en: "Comma-separated names.",

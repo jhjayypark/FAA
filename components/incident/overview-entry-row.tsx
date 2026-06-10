@@ -11,7 +11,7 @@ import {
 import type { OverviewEntry } from "@/lib/types";
 import { useFAAStore } from "@/lib/store";
 import { useT } from "@/lib/i18n";
-import { formatDateTime } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -139,7 +139,7 @@ export function OverviewEntryRow({
         )}
         {entry.dateTime && (
           <p className="pt-0.5 font-mono text-xs text-muted-foreground">
-            {formatDateTime(entry.dateTime)}
+            {formatDate(entry.dateTime)}
           </p>
         )}
       </div>

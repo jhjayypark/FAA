@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, Location01Icon } from "@hugeicons/core-free-icons";
-import type { Incident } from "@/lib/types";
+import type { FNSLocation, Incident } from "@/lib/types";
 import { locationById, useAllLocations } from "@/lib/store";
 import { useT } from "@/lib/i18n";
 import { formatDate, formatRelative } from "@/lib/format";
+import { LocationMapDialog } from "@/components/location-map-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -61,6 +62,7 @@ function ContextPanel({ context }: { context: string }) {
 export function IncidentHeader({ incident }: { incident: Incident }) {
   const t = useT();
   const allLocations = useAllLocations();
+  const [mapLocation, setMapLocation] = useState<FNSLocation | null>(null);
   const locations = incident.involvedLocationIds
     .map((id) => locationById(allLocations, id))
     .filter((loc): loc is NonNullable<typeof loc> => loc != null);
@@ -83,7 +85,12 @@ export function IncidentHeader({ incident }: { incident: Incident }) {
             {locations.map((loc) => (
               <Tooltip key={loc.id}>
                 <TooltipTrigger asChild>
-                  <span className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-foreground">
+                  <button
+                    type="button"
+                    onClick={() => setMapLocation(loc)}
+                    aria-label={t("common.map.showOnMap", { name: loc.name })}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-foreground transition-colors duration-150 hover:bg-accent"
+                  >
                     <HugeiconsIcon
                       icon={Location01Icon}
                       size={12}
@@ -91,7 +98,7 @@ export function IncidentHeader({ incident }: { incident: Incident }) {
                       className="text-muted-foreground"
                     />
                     {loc.name}
-                  </span>
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent>{loc.address}</TooltipContent>
               </Tooltip>
@@ -99,6 +106,13 @@ export function IncidentHeader({ incident }: { incident: Incident }) {
           </div>
         </TooltipProvider>
       )}
+
+      <LocationMapDialog
+        location={mapLocation}
+        onOpenChange={(open) => {
+          if (!open) setMapLocation(null);
+        }}
+      />
 
       <p className="font-mono text-xs text-muted-foreground">
         {t("incidentDetail.meta.createdUpdated", {

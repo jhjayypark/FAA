@@ -24,7 +24,7 @@ import {
 export type EntryDraft = {
   type: OverviewEntryType;
   title: string;
-  /** Value of the datetime-local input, not an ISO string. */
+  /** Value of the date input (yyyy-mm-dd). */
   dateTimeLocal: string;
   /** Comma-separated names as typed. */
   people: string;
@@ -58,22 +58,22 @@ export function emptyDraft(type: OverviewEntryType = "interview"): EntryDraft {
   return { type, title: "", dateTimeLocal: "", people: "", description: "" };
 }
 
-/** ISO string to the local value format expected by datetime-local inputs. */
+/**
+ * Stored value to the "yyyy-mm-dd" format expected by date inputs.
+ * Handles both date-only values and legacy full ISO datetimes.
+ */
 export function isoToLocalInput(iso?: string): string {
   if (!iso) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+/** Date inputs already produce "yyyy-mm-dd"; store it verbatim (no timezone math). */
 export function localInputToIso(value: string): string | undefined {
-  if (!value) return undefined;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return undefined;
-  return d.toISOString();
+  return value || undefined;
 }
 
 export function draftFromEntry(entry: OverviewEntry): EntryDraft {
@@ -189,7 +189,7 @@ export function EntryFields({
             </Label>
             <Input
               id={`${idPrefix}-datetime`}
-              type="datetime-local"
+              type="date"
               value={draft.dateTimeLocal}
               onChange={(e) => onChange({ dateTimeLocal: e.target.value })}
             />
@@ -233,7 +233,7 @@ export function EntryFields({
             </Label>
             <Input
               id={`${idPrefix}-datetime`}
-              type="datetime-local"
+              type="date"
               value={draft.dateTimeLocal}
               onChange={(e) => onChange({ dateTimeLocal: e.target.value })}
             />
