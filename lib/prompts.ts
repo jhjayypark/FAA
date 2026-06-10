@@ -116,28 +116,27 @@ OUTPUT:
 Return only valid JSON with:
 {
   "intervieweeName": string | null,
+  "interviewDate": string | null,  // ISO yyyy-mm-dd when stated in the materials (e.g. "일시: 2026-06-09")
   "qaItems": [
     {
       "question": string,
       "answer": string,
       "importance": "High" | "Medium" | "Low",
-      "importanceReason": string,
-      "includedInReport": boolean,
+      "importanceReason": string,   // short Korean reason for the importance rating
+      "includedInReport": boolean,  // true unless importance is Low
       "timestampLabel": string | null,
       "sourceCitations": [
         {
-          "fileId": string,
-          "fileName": string,
-          "quote": string,
-          "startChar": number | null,
-          "endChar": number | null,
-          "pageNumber": number | null,
-          "confidence": number
+          "fileId": string,    // the id= value from the FILE header, verbatim
+          "fileName": string,  // the name= value from the FILE header, verbatim
+          "quote": string,     // verbatim excerpt copied EXACTLY from that file (the app locates it by exact string match to highlight the source)
+          "confidence": number // 0..1
         }
       ]
     }
   ]
-}`;
+}
+Each quote must be copied character-for-character from its file, including spacing — the app highlights the source span by exact string search, and an altered quote breaks the link.`;
 
 /** System prompt for the incident-scoped audit assistant. */
 export const ASSISTANT_SYSTEM_PROMPT = `You are FAA, FNS Audit Assistant, helping an internal auditor understand a selected audit incident.

@@ -1,10 +1,10 @@
 /**
  * Extraction pipeline entry point.
  *
- * Today this routes to the heuristic mock extractor. The function signature,
- * prompt constants (lib/prompts.ts), and JSON output shape are already
- * LLM-ready: connecting a provider only requires implementing
- * `runLLMExtraction` and setting an API key.
+ * Tries the LLM route (app/api/extract — Claude with the strict prompt in
+ * lib/prompts.ts) first and falls back to the heuristic extractor when the
+ * server has no API key configured (503) or the call fails, so the app stays
+ * usable offline and without billing set up.
  */
 
 import type {
@@ -15,8 +15,6 @@ import type {
   UploadedInterviewFile,
 } from "@/lib/types";
 import { runMockExtraction } from "@/lib/extraction/mock-extractor";
-// Imported so the wiring for a real provider call is in place and type-checked.
-import { EXTRACTION_SYSTEM_PROMPT, buildExtractionUserPrompt } from "@/lib/prompts";
 
 export type ExtractionStage =
   | "Parsing source files"
@@ -46,35 +44,51 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function llmConfigured(): boolean {
-  // TODO: Replace mock extraction with real LLM provider call.
-  // When a provider is connected, gate on its API key here, e.g.:
-  // return Boolean(process.env.NEXT_PUBLIC_LLM_PROXY_URL);
-  return false;
-}
+/** Sticky availability flag: once the server says "no key", skip the
+ * round-trip for the rest of the session. */
+let llmUnavailable = false;
 
-async function runLLMExtraction(input: ExtractInput): Promise<ExtractionResult> {
-  // TODO: Replace mock extraction with real LLM provider call.
-  // The request payload is already prepared:
-  const systemPrompt = EXTRACTION_SYSTEM_PROMPT;
-  const userPrompt = buildExtractionUserPrompt(input);
-  void systemPrompt;
-  void userPrompt;
-  throw new Error("No LLM provider configured.");
+async function runLLMExtraction(input: ExtractInput): Promise<ExtractionResult | null> {
+  if (llmUnavailable) return null;
+  const { incident, overviewEntries, uploadedFiles, settings } = input;
+
+  let response: Response;
+  try {
+    response = await fetch("/api/extract", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ incident, overviewEntries, uploadedFiles, settings }),
+    });
+  } catch {
+    return null; // network failure — fall back to the heuristic extractor
+  }
+
+  if (response.status === 503) {
+    llmUnavailable = true;
+    return null;
+  }
+  if (!response.ok) {
+    console.warn(`LLM extraction failed (${response.status}); using heuristic extractor.`);
+    return null;
+  }
+  return (await response.json()) as ExtractionResult;
 }
 
 export async function extractInterviewInsights(input: ExtractInput): Promise<ExtractionResult> {
   const { onProgress } = input;
 
   // Staged progress so the extraction UI reflects honest pipeline phases.
-  for (let i = 0; i < STAGES.length - 1; i++) {
+  // The LLM call spans the middle stages; the heuristic path is near-instant.
+  for (let i = 0; i < 2; i++) {
     onProgress?.(STAGES[i], Math.round((i / STAGES.length) * 100));
-    await sleep(450);
+    await sleep(350);
   }
+  onProgress?.(STAGES[2], 40);
 
-  const result = llmConfigured()
-    ? await runLLMExtraction(input)
-    : runMockExtraction(input);
+  const llmResult = await runLLMExtraction(input);
+
+  onProgress?.(STAGES[3], 75);
+  const result = llmResult ?? runMockExtraction(input);
 
   onProgress?.(STAGES[STAGES.length - 1], 100);
   await sleep(300);
