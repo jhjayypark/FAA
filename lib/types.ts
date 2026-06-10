@@ -56,6 +56,8 @@ export type QAItem = {
   answer: string;
   importance: Importance;
   importanceReason?: string;
+  /** Reviewer note: source coverage, STT name variants, conflicts, follow-ups. */
+  extractionNote?: string;
   includedInReport: boolean;
   isManuallyEdited: boolean;
   sourceCitations: SourceCitation[];

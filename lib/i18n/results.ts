@@ -113,6 +113,7 @@ export const RESULTS = {
   },
   "results.card.updated": { en: "Card updated.", ko: "카드가 수정되었습니다." },
   "results.card.reason": { en: "Reason", ko: "사유" },
+  "results.card.note": { en: "Note", ko: "노트" },
   "results.card.citations.one": { en: "{count} citation", ko: "인용 {count}건" },
   "results.card.citations.many": { en: "{count} citations", ko: "인용 {count}건" },
   "results.noCitationWarning": {

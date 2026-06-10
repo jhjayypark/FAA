@@ -740,11 +740,14 @@ export function runMockExtraction(args: {
   // Citations keep quoting the original transcript with exact offsets.
   let qaItems: ExtractedQAItem[] = crossMerged.map((qa) => {
     const { importance, reason, contextMatched } = scoreImportance(qa, ctx);
+    const citedFiles = new Set(qa.citations.map((c) => c.fileId));
     return {
       question: condenseQuestion(qa.question, { preferFirst: qa.preferFirstQuestion }),
       answer: condenseAnswer(qa.answer),
       importance,
       importanceReason: reason,
+      extractionNote:
+        citedFiles.size > 1 ? "녹취와 수기 노트 모두에서 확인" : undefined,
       includedInReport: importance !== "Low",
       sourceCitations: qa.citations,
       timestampLabel: qa.timestampLabel,

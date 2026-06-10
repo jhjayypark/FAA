@@ -218,6 +218,13 @@ export function QACard({
             </p>
           )}
 
+          {item.extractionNote && (
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              <span className="font-medium">{t("results.card.note")}</span>{" "}
+              {item.extractionNote}
+            </p>
+          )}
+
           {citationCount === 0 && (
             <div className="mt-3 flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
               <HugeiconsIcon

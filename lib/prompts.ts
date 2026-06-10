@@ -65,12 +65,21 @@ Q CONSISTENCY GUARD — a Q must always make sense on its own:
 - 나쁨: "Q. Speaker 2가 말한 주소 관련 내용은?" / 좋음: "Q. Savannah Freight 주소를 Turner 자택으로 등록한 이유는?"
 
 ANSWER COMPRESSION:
-Original answers may be long, repetitive, emotional, or overly detailed. Compress each into a short factual Korean answer.
-- One sentence whenever possible, usually one line; at most 2-3 short lines (~150 Korean characters). Never a long paragraph.
-- Keep only facts directly supported by the source. ALWAYS preserve concrete facts: 이름, 날짜, 금액, 회사/법인명, 수량.
+Original answers may be long, repetitive, emotional, or overly detailed. Compress each into a clear, factual Korean answer.
+- COHERENCE BEFORE BREVITY. The answer must read as complete, natural Korean that someone who never saw the source fully understands on its own. NEVER paste source fragments together — rewrite them into proper sentences. A short answer that doesn't make sense is worse than a longer one that does.
+- 두괄식: the FIRST sentence directly answers the question ("소통할 시간이 없었습니다."); supporting detail and context follow.
+- Spoken Korean drops subjects and objects — restore them from context so every sentence has a clear actor. Reported/quoted speech must be attributed: 원문 "와서 이것 좀 해줘 이것 좀 해줘 이것 좀 확인 좀 해줘 약간 이런 거" → "실장님이 '이것 좀 확인해 줘' 하고 부탁하시는 정도였습니다" (WHO says it must be explicit — an unattributed quote fragment is incomprehensible).
+- Length: as short as the content allows — typically 1-3 sentences. A complex High item (경위, 보고 라인, 의사결정 구조 등) may legitimately need several sentences; that is fine. Never a rambling paragraph, but never sacrifice comprehensibility to save a line.
+- Keep only facts directly supported by the source. ALWAYS preserve concrete facts: 이름, 직급, 날짜, 금액, 회사/법인명, 수량.
 - Preserve uncertainty, denial, and lack of knowledge EXACTLY ("없습니다", "잘 모르겠습니다", "기억나지 않습니다") — never soften, never harden, never guess.
 - If the answer is unclear, write "모름" or exclude the item.
 - If the source shows an interview timestamp such as (10:05) next to an exchange, copy it verbatim into timestampLabel; otherwise use null.
+
+SYNTHESIS EXAMPLE (transcript + manual note → one coherent answer; tone/shape reference only):
+녹취: "사실 소통할 일도 거의 없긴 했어요… (실장님이) 와서 이것 좀 해줘 이것 좀 확인 좀 해줘 약간 이런 거"
+수기노트: "소통할 시간이 없었어요. 1-2월까지만해도 분위기가 많이 달랐어요… 소통할 기회가 없었어요."
+→ A: "소통할 시간이 없었습니다. 올 1~2월까지만 해도 분위기가 많이 달랐고, 처음엔 사람도 없어 셋업·고객 대응하느라 소통할 기회가 없었습니다. 소통이라고 하면 제가 바빠서 메일을 놓치면 실장님이 확인 부탁을 하시는 정도였습니다."
+(나쁜 예 — fragment collage, 주어 누락: "와서 이것 좀 해줘, 확인 좀 해줘 정도이고 특별히 소통할 일도 많지 않습니다.")
 
 ANSWER TONE RULE (final PPT template, 예시 말투.pptx):
 1. Write A in the interviewee's DIRECT first-person speech (1인칭 진술체).
@@ -96,6 +105,14 @@ ANSWER COMPRESSION EXAMPLES (direct-speech tone):
 → A: "Dispatcher에게 특혜를 요청한 적 없고, Dispatcher들은 저와 해당 법인의 관계를 몰랐습니다."
 원문: "개인정보에 해당돼 파일 공유는 어려울 것 같습니다. 다만, 후에 같이 눈으로 확인하실 수 있도록 보여드리는 건 가능합니다."
 → A: "파일 공유는 어렵지만, 추후 직접 확인하실 수 있도록 보여드리는 것은 가능합니다."
+
+EXTRACTION NOTE (per Q&A, field "extractionNote"):
+A short Korean reviewer note recording verification status and caveats — what an auditor needs before trusting the item. Use null when there is nothing noteworthy. Cover, when applicable:
+- Source coverage: "녹취와 수기노트 모두에서 확인" / "녹취에서만 확인" / "수기노트에서만 확인" (when both files exist but only one supports the item).
+- STT name/term variants: normalize the Q&A text to the most reliable spelling (manual notes win over STT), and flag the variants here, e.g. "전임 실장 성명 녹취 '조용준'/수기 '김용준'으로 상이 — 확인 필요".
+- Source conflicts: "자료 간 불일치 있음" plus what differs (the answer itself must stay neutral and cite both).
+- Heavy condensation of a long passage: "장문 압축".
+- Anything requiring follow-up verification ("사번은 수기 기준, 녹취는 청취 불명확 — 확인 필요").
 
 IMPORTANCE:
 - High: directly relevant to the incident, ownership, relationship, conflict of interest, instruction, dispatch, payment, timeline, policy issue, responsibility, contradiction, evidence, or key decision.
@@ -123,6 +140,7 @@ Return only valid JSON with:
       "answer": string,
       "importance": "High" | "Medium" | "Low",
       "importanceReason": string,   // short Korean reason for the importance rating
+      "extractionNote": string | null,  // reviewer note per EXTRACTION NOTE section; null when nothing noteworthy
       "includedInReport": boolean,  // true unless importance is Low
       "timestampLabel": string | null,
       "sourceCitations": [

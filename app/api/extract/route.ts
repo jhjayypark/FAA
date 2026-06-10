@@ -50,6 +50,7 @@ const EXTRACTION_SCHEMA = {
           answer: { type: "string" },
           importance: { type: "string", enum: ["High", "Medium", "Low"] },
           importanceReason: { type: "string" },
+          extractionNote: { type: ["string", "null"] },
           includedInReport: { type: "boolean" },
           timestampLabel: { type: ["string", "null"] },
           sourceCitations: {
@@ -72,6 +73,7 @@ const EXTRACTION_SCHEMA = {
           "answer",
           "importance",
           "importanceReason",
+          "extractionNote",
           "includedInReport",
           "timestampLabel",
           "sourceCitations",
@@ -90,6 +92,7 @@ type LLMQAItem = {
   answer: string;
   importance: Importance;
   importanceReason: string;
+  extractionNote: string | null;
   includedInReport: boolean;
   timestampLabel: string | null;
   sourceCitations: LLMCitation[];
@@ -168,6 +171,7 @@ function toExtractionResult(
       answer: qa.answer.trim(),
       importance: qa.importance,
       importanceReason: qa.importanceReason,
+      extractionNote: qa.extractionNote ?? undefined,
       includedInReport: qa.includedInReport,
       timestampLabel: qa.timestampLabel ?? undefined,
       sourceCitations: qa.sourceCitations
@@ -227,7 +231,9 @@ export async function POST(request: Request) {
     // is still consumed server-side and returned as one JSON response.
     const stream = client.messages.stream({
       model: MODEL,
-      max_tokens: 16000,
+      // A 77-minute transcript can yield ~30 items with two long quotes each;
+      // a tight budget pressures the model into lossy over-compression.
+      max_tokens: 32000,
       thinking: { type: "adaptive" },
       system: EXTRACTION_SYSTEM_PROMPT,
       output_config: {
