@@ -10,6 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Importance, QAItem } from "@/lib/types";
 import { useFAAStore } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,6 +43,7 @@ export function QACard({
   dimmed: boolean;
   onViewSource: (qaId: string) => void;
 }) {
+  const t = useT();
   const updateQAItem = useFAAStore((s) => s.updateQAItem);
   const [editing, setEditing] = useState(false);
   const [draftQuestion, setDraftQuestion] = useState("");
@@ -65,7 +67,7 @@ export function QACard({
     const question = draftQuestion.trim();
     const answer = draftAnswer.trim();
     if (!question || !answer) {
-      setEditError("Question and answer cannot be empty.");
+      setEditError(t("results.card.emptyError"));
       return;
     }
     updateQAItem(incidentId, sessionId, item.id, {
@@ -76,7 +78,7 @@ export function QACard({
       isManuallyEdited: true,
     });
     setEditing(false);
-    toast.success("Card updated.");
+    toast.success(t("results.card.updated"));
   }
 
   return (
@@ -89,7 +91,9 @@ export function QACard({
       {editing ? (
         <div className="space-y-3">
           <div className="grid gap-2">
-            <Label htmlFor={`qa-question-${item.id}`}>Question</Label>
+            <Label htmlFor={`qa-question-${item.id}`}>
+              {t("results.card.question")}
+            </Label>
             <Textarea
               id={`qa-question-${item.id}`}
               value={draftQuestion}
@@ -98,7 +102,9 @@ export function QACard({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor={`qa-answer-${item.id}`}>Answer</Label>
+            <Label htmlFor={`qa-answer-${item.id}`}>
+              {t("results.card.answer")}
+            </Label>
             <Textarea
               id={`qa-answer-${item.id}`}
               value={draftAnswer}
@@ -107,7 +113,9 @@ export function QACard({
             />
           </div>
           <div className="grid gap-2">
-            <Label id={`qa-importance-label-${item.id}`}>Importance</Label>
+            <Label id={`qa-importance-label-${item.id}`}>
+              {t("results.card.importance")}
+            </Label>
             <Select
               value={draftImportance}
               onValueChange={(v) => setDraftImportance(v as Importance)}
@@ -126,7 +134,9 @@ export function QACard({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor={`qa-reason-${item.id}`}>Importance reason</Label>
+            <Label htmlFor={`qa-reason-${item.id}`}>
+              {t("results.card.importanceReason")}
+            </Label>
             <Textarea
               id={`qa-reason-${item.id}`}
               rows={2}
@@ -138,10 +148,10 @@ export function QACard({
           {editError && <p className="text-xs text-destructive">{editError}</p>}
           <div className="flex items-center gap-2 pt-1">
             <Button size="sm" onClick={saveEdit}>
-              Save
+              {t("common.save")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </div>
@@ -155,7 +165,7 @@ export function QACard({
                   includedInReport: v === true,
                 })
               }
-              aria-label="Include in report"
+              aria-label={t("results.card.includeInReport")}
             />
             <ImportanceBadge importance={item.importance} />
             {item.timestampLabel && (
@@ -164,7 +174,9 @@ export function QACard({
               </span>
             )}
             {item.isManuallyEdited && (
-              <span className="text-xs text-muted-foreground">Edited</span>
+              <span className="text-xs text-muted-foreground">
+                {t("results.card.edited")}
+              </span>
             )}
             <div className="ml-auto flex items-center gap-1.5">
               <Button
@@ -173,11 +185,11 @@ export function QACard({
                 onClick={() => onViewSource(item.id)}
               >
                 <HugeiconsIcon icon={QuoteDownIcon} size={13} strokeWidth={1.8} />
-                View Source
+                {t("results.card.viewSource")}
               </Button>
               <Button variant="ghost" size="sm" onClick={startEdit}>
                 <HugeiconsIcon icon={PencilEdit01Icon} size={13} strokeWidth={1.8} />
-                Edit
+                {t("common.edit")}
               </Button>
             </div>
           </div>
@@ -201,7 +213,8 @@ export function QACard({
 
           {item.importanceReason && (
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-              <span className="font-medium">Reason</span> {item.importanceReason}
+              <span className="font-medium">{t("results.card.reason")}</span>{" "}
+              {item.importanceReason}
             </p>
           )}
 
@@ -213,13 +226,18 @@ export function QACard({
                 strokeWidth={1.8}
                 className="shrink-0"
               />
-              No source citation found. Please review before using.
+              {t("results.noCitationWarning")}
             </div>
           )}
 
           <div className="mt-3.5 border-t pt-2.5">
             <span className="font-mono text-xs text-muted-foreground">
-              {citationCount} {citationCount === 1 ? "citation" : "citations"}
+              {t(
+                citationCount === 1
+                  ? "results.card.citations.one"
+                  : "results.card.citations.many",
+                { count: citationCount }
+              )}
             </span>
           </div>
         </>

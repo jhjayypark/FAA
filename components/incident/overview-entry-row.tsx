@@ -10,6 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { OverviewEntry } from "@/lib/types";
 import { useFAAStore } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { formatDateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +44,7 @@ export function OverviewEntryRow({
   incidentId: string;
   entry: OverviewEntry;
 }) {
+  const t = useT();
   const updateOverviewEntry = useFAAStore((s) => s.updateOverviewEntry);
   const deleteOverviewEntry = useFAAStore((s) => s.deleteOverviewEntry);
 
@@ -61,12 +63,12 @@ export function OverviewEntryRow({
     if (!draft.title.trim()) return;
     updateOverviewEntry(incidentId, entry.id, draftToEntryFields(draft));
     setEditing(false);
-    toast.success("Entry updated.");
+    toast.success(t("incidentDetail.toast.entryUpdated"));
   };
 
   const handleDelete = () => {
     deleteOverviewEntry(incidentId, entry.id);
-    toast.success("Entry deleted.");
+    toast.success(t("incidentDetail.toast.entryDeleted"));
   };
 
   if (editing) {
@@ -95,10 +97,10 @@ export function OverviewEntryRow({
         />
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => setEditing(false)}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={!draft.title.trim()}>
-            Save
+            {t("common.save")}
           </Button>
         </div>
       </form>
@@ -147,7 +149,7 @@ export function OverviewEntryRow({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Entry actions"
+            aria-label={t("incidentDetail.entries.rowActions")}
             className="shrink-0 text-muted-foreground"
           >
             <HugeiconsIcon icon={MoreHorizontalIcon} size={15} strokeWidth={1.8} />
@@ -156,14 +158,14 @@ export function OverviewEntryRow({
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={startEdit}>
             <HugeiconsIcon icon={PencilEdit01Icon} size={14} strokeWidth={1.8} />
-            Edit
+            {t("common.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
             onSelect={() => setConfirmDelete(true)}
           >
             <HugeiconsIcon icon={Delete02Icon} size={14} strokeWidth={1.8} />
-            Delete
+            {t("common.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -171,16 +173,19 @@ export function OverviewEntryRow({
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete entry?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("incidentDetail.deleteEntry.title")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove &quot;{entry.title}&quot; from the
-              incident overview. This action cannot be undone.
+              {t("incidentDetail.deleteEntry.description", {
+                title: entry.title,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

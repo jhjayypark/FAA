@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { BubbleChatIcon, Delete02Icon } from "@hugeicons/core-free-icons";
 import { useAllLocations, useFAAStore, useHydrated } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { answerQuestion } from "@/lib/assistant/answer";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,7 @@ import { Composer } from "@/components/assistant/composer";
  * this component in a <Suspense> boundary.
  */
 export function AssistantView() {
+  const t = useT();
   const hydrated = useHydrated();
   const searchParams = useSearchParams();
   const incidents = useFAAStore((s) => s.incidents);
@@ -89,7 +91,7 @@ export function AssistantView() {
         addAssistantMessage(id, { role: "assistant", content: reply });
       }
     } catch {
-      toast.error("Could not generate a reply. Please try again.");
+      toast.error(t("assistant.replyError"));
     } finally {
       setPendingId(null);
     }
@@ -98,7 +100,7 @@ export function AssistantView() {
   function handleClear() {
     if (!selectedIncident) return;
     clearAssistantThread(selectedIncident.id);
-    toast.success("Conversation cleared.");
+    toast.success(t("assistant.clearedToast"));
   }
 
   if (!hydrated) return <AssistantSkeleton />;
@@ -108,27 +110,27 @@ export function AssistantView() {
       {/* Top bar */}
       <div className="flex flex-col gap-2 border-b px-6 py-3 md:flex-row md:items-center md:gap-4">
         <div className="flex items-center justify-between gap-3 md:contents">
-          <h1 className="shrink-0 text-sm font-semibold">Assistant</h1>
+          <h1 className="shrink-0 text-sm font-semibold">{t("assistant.title")}</h1>
           <div className="md:order-last md:ml-auto">
             {selectedIncident && messages.length > 0 && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="sm">
                     <HugeiconsIcon icon={Delete02Icon} size={14} strokeWidth={1.8} />
-                    Clear conversation
+                    {t("assistant.clear")}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Clear conversation</AlertDialogTitle>
+                    <AlertDialogTitle>{t("assistant.clear")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      {`This removes all messages for "${selectedIncident.name}". This action cannot be undone.`}
+                      {t("assistant.clearDescription", { name: selectedIncident.name })}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                     <AlertDialogAction variant="destructive" onClick={handleClear}>
-                      Clear
+                      {t("assistant.clearAction")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -141,8 +143,8 @@ export function AssistantView() {
           onValueChange={setUserSelectedId}
           disabled={incidents.length === 0}
         >
-          <SelectTrigger className="w-full md:w-72" aria-label="Select incident">
-            <SelectValue placeholder="Select incident" />
+          <SelectTrigger className="w-full md:w-72" aria-label={t("assistant.selectIncident")}>
+            <SelectValue placeholder={t("assistant.selectIncident")} />
           </SelectTrigger>
           <SelectContent>
             {incidents.map((inc) => (
@@ -166,20 +168,23 @@ export function AssistantView() {
             />
             {incidents.length === 0 ? (
               <>
-                <div className="text-sm font-semibold">No incidents yet</div>
+                <div className="text-sm font-semibold">
+                  {t("assistant.emptyNoIncidentsTitle")}
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Create an incident first, then ask questions grounded in its audit
-                  materials.
+                  {t("assistant.emptyNoIncidentsDescription")}
                 </p>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/incidents">Go to Incidents</Link>
+                  <Link href="/incidents">{t("assistant.goToIncidents")}</Link>
                 </Button>
               </>
             ) : (
               <>
-                <div className="text-sm font-semibold">No incident selected</div>
+                <div className="text-sm font-semibold">
+                  {t("assistant.emptyNoSelectionTitle")}
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Select an incident to ask questions based on its audit context.
+                  {t("assistant.emptyNoSelectionDescription")}
                 </p>
               </>
             )}
@@ -194,11 +199,7 @@ export function AssistantView() {
               strokeWidth={1.5}
               className="text-muted-foreground"
             />
-            <p className="text-sm text-muted-foreground">
-              {
-                "Answers are grounded in this incident's interviews, notes, and findings. The assistant replies in Korean."
-              }
-            </p>
+            <p className="text-sm text-muted-foreground">{t("assistant.grounding")}</p>
             <SuggestedPrompts onSelect={handleSend} disabled={thinking} />
           </div>
         </div>

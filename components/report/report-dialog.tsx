@@ -12,6 +12,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Incident, InterviewSession, ReportOptions } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 import { locationById, useAllLocations } from "@/lib/store";
 import { generatePptx } from "@/lib/report/generate-pptx";
 import { buildSlideModels } from "@/components/report/slide-model";
@@ -34,12 +35,12 @@ const HEX_RE = /^#?[0-9a-fA-F]{6}$/;
 
 type IncludeKey = "context" | "locations" | "badges" | "citations" | "appendix";
 
-const INCLUDE_FIELDS: Array<{ key: IncludeKey; label: string }> = [
-  { key: "context", label: "Incident context" },
-  { key: "locations", label: "Involved locations" },
-  { key: "badges", label: "Importance badges" },
-  { key: "citations", label: "Source citations" },
-  { key: "appendix", label: "Appendix with all selected Q&A" },
+const INCLUDE_FIELDS: Array<{ key: IncludeKey; labelKey: string }> = [
+  { key: "context", labelKey: "report.include.context" },
+  { key: "locations", labelKey: "report.include.locations" },
+  { key: "badges", labelKey: "report.include.badges" },
+  { key: "citations", labelKey: "report.include.citations" },
+  { key: "appendix", labelKey: "report.include.appendix" },
 ];
 
 function normalizeHex(value: string): string {
@@ -57,6 +58,7 @@ export function ReportDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const [view, setView] = useState<"options" | "preview">("options");
   const [title, setTitle] = useState(`${incident.name} Interview Findings`);
   const [hexInput, setHexInput] = useState(DEFAULT_THEME);
@@ -138,10 +140,10 @@ export function ReportDialog({
     setDownloading(true);
     try {
       await generatePptx({ incident, session, options: reportOptions });
-      toast.success("PPTX downloaded.");
+      toast.success(t("report.toastDownloaded"));
     } catch (err) {
       toast.error(
-        err instanceof Error && err.message ? err.message : "Failed to generate the PPTX file."
+        err instanceof Error && err.message ? err.message : t("report.toastFailed")
       );
     } finally {
       setDownloading(false);
@@ -161,16 +163,14 @@ export function ReportDialog({
         {view === "options" ? (
           <>
             <DialogHeader className="shrink-0 border-b px-5 pt-5 pb-4 pr-12">
-              <DialogTitle>Generate PPTX Report</DialogTitle>
-              <DialogDescription>
-                Configure the report content, then preview the slides before downloading.
-              </DialogDescription>
+              <DialogTitle>{t("report.optionsTitle")}</DialogTitle>
+              <DialogDescription>{t("report.optionsDescription")}</DialogDescription>
             </DialogHeader>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
               <div className="flex flex-col gap-5">
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="report-title">Report title</Label>
+                  <Label htmlFor="report-title">{t("report.titleLabel")}</Label>
                   <Input
                     id="report-title"
                     value={title}
@@ -178,18 +178,18 @@ export function ReportDialog({
                     aria-invalid={!titleValid}
                   />
                   {!titleValid && (
-                    <p className="text-xs text-destructive">Report title is required.</p>
+                    <p className="text-xs text-destructive">{t("report.titleRequired")}</p>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="report-hex">Theme color</Label>
+                  <Label htmlFor="report-hex">{t("report.themeColorLabel")}</Label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={hexValid ? normalizeHex(hexInput) : themeColor}
                       onChange={(e) => handleSwatch(e.target.value)}
-                      aria-label="Theme color swatch"
+                      aria-label={t("report.themeColorSwatch")}
                       className="h-7 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-transparent p-0.5"
                     />
                     <Input
@@ -202,14 +202,12 @@ export function ReportDialog({
                     />
                   </div>
                   {!hexValid && (
-                    <p className="text-xs text-destructive">
-                      Enter a valid 6 digit hex color, for example #1F3A5F.
-                    </p>
+                    <p className="text-xs text-destructive">{t("report.hexInvalid")}</p>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="report-template">PPTX template (optional)</Label>
+                  <Label htmlFor="report-template">{t("report.templateLabel")}</Label>
                   <Input
                     id="report-template"
                     type="file"
@@ -228,15 +226,14 @@ export function ReportDialog({
                         className="mt-0.5 shrink-0 text-muted-foreground"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Template uploaded. Template styling will be supported in the next
-                        version.
+                        {t("report.templateNote")}
                       </p>
                     </div>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-2.5">
-                  <p className="text-xs leading-none font-medium">Include in report</p>
+                  <p className="text-xs leading-none font-medium">{t("report.includeLabel")}</p>
                   <div className="flex flex-col gap-2.5">
                     {INCLUDE_FIELDS.map((field) => (
                       <div key={field.key} className="flex items-center gap-2.5">
@@ -248,7 +245,7 @@ export function ReportDialog({
                           }
                         />
                         <Label htmlFor={`include-${field.key}`} className="font-normal">
-                          {field.label}
+                          {t(field.labelKey)}
                         </Label>
                       </div>
                     ))}
@@ -257,8 +254,12 @@ export function ReportDialog({
 
                 {includedCount > 0 ? (
                   <p className="text-xs text-muted-foreground">
-                    {includedCount} selected Q&A {includedCount === 1 ? "item" : "items"} will
-                    be included.
+                    {t(
+                      includedCount === 1
+                        ? "report.selectedSummary.one"
+                        : "report.selectedSummary.many",
+                      { count: includedCount }
+                    )}
                   </p>
                 ) : (
                   <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2.5">
@@ -268,10 +269,7 @@ export function ReportDialog({
                       strokeWidth={1.8}
                       className="mt-0.5 shrink-0 text-destructive"
                     />
-                    <p className="text-xs text-destructive">
-                      No Q&A cards are selected for the report. Select cards on the results
-                      page first.
-                    </p>
+                    <p className="text-xs text-destructive">{t("report.noneSelected")}</p>
                   </div>
                 )}
               </div>
@@ -279,10 +277,10 @@ export function ReportDialog({
 
             <DialogFooter className="shrink-0 border-t px-5 py-4">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button onClick={() => setView("preview")} disabled={!canGenerate}>
-                Generate Preview
+                {t("report.generatePreview")}
               </Button>
             </DialogFooter>
           </>
@@ -291,10 +289,14 @@ export function ReportDialog({
             <DialogHeader className="shrink-0 border-b px-5 pt-5 pb-4 pr-12">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex flex-col gap-1">
-                  <DialogTitle>Report Preview</DialogTitle>
+                  <DialogTitle>{t("report.previewTitle")}</DialogTitle>
                   <DialogDescription>
-                    {slides.length} {slides.length === 1 ? "slide" : "slides"}. Review the
-                    layout, then download the PPTX file.
+                    {t(
+                      slides.length === 1
+                        ? "report.previewDescription.one"
+                        : "report.previewDescription.many",
+                      { count: slides.length }
+                    )}
                   </DialogDescription>
                 </div>
                 <Button
@@ -304,7 +306,7 @@ export function ReportDialog({
                   onClick={() => setView("options")}
                 >
                   <HugeiconsIcon icon={ArrowLeft01Icon} size={14} strokeWidth={1.8} />
-                  Back to options
+                  {t("report.backToOptions")}
                 </Button>
               </div>
             </DialogHeader>
@@ -319,7 +321,7 @@ export function ReportDialog({
                 onClick={() => setView("options")}
                 disabled={downloading}
               >
-                Back
+                {t("common.back")}
               </Button>
               <Button onClick={handleDownload} disabled={downloading}>
                 {downloading ? (
@@ -332,7 +334,7 @@ export function ReportDialog({
                 ) : (
                   <HugeiconsIcon icon={Download01Icon} size={14} strokeWidth={1.8} />
                 )}
-                Download PPTX
+                {downloading ? t("report.downloading") : t("report.downloadPptx")}
               </Button>
             </DialogFooter>
           </>

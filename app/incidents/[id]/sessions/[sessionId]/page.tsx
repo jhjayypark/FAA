@@ -6,6 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, FileSearchIcon } from "@hugeicons/core-free-icons";
 import type { Importance, QAItem } from "@/lib/types";
 import { useHydrated, useIncident } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SessionHeader } from "@/components/results/session-header";
@@ -72,6 +73,7 @@ function PageSkeleton() {
 }
 
 function NotFoundState({ incidentId }: { incidentId?: string }) {
+  const t = useT();
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-8">
       <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
@@ -81,9 +83,11 @@ function NotFoundState({ incidentId }: { incidentId?: string }) {
           strokeWidth={1.5}
           className="text-muted-foreground"
         />
-        <h1 className="mt-3 text-sm font-semibold">Session not found</h1>
+        <h1 className="mt-3 text-sm font-semibold">
+          {t("results.notFound.title")}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          This interview session does not exist or was removed.
+          {t("results.notFound.description")}
         </p>
         <Button asChild variant="outline" className="mt-4">
           <Link
@@ -92,7 +96,9 @@ function NotFoundState({ incidentId }: { incidentId?: string }) {
             }
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={14} strokeWidth={1.8} />
-            {incidentId ? "Back to Incident" : "Back to Incidents"}
+            {incidentId
+              ? t("results.notFound.back")
+              : t("results.notFound.backAll")}
           </Link>
         </Button>
       </div>
@@ -101,6 +107,7 @@ function NotFoundState({ incidentId }: { incidentId?: string }) {
 }
 
 function EmptySessionState({ incidentId }: { incidentId: string }) {
+  const t = useT();
   return (
     <div className="mt-5 flex max-w-4xl flex-col items-center rounded-lg border border-dashed px-6 py-14 text-center">
       <HugeiconsIcon
@@ -109,13 +116,13 @@ function EmptySessionState({ incidentId }: { incidentId: string }) {
         strokeWidth={1.5}
         className="text-muted-foreground"
       />
-      <h2 className="mt-3 text-sm font-semibold">No Q&A items in this session.</h2>
+      <h2 className="mt-3 text-sm font-semibold">{t("results.empty.title")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Run a new extraction from the incident page to generate findings.
+        {t("results.empty.description")}
       </p>
       <Button asChild variant="outline" className="mt-4">
         <Link href={`/incidents/${incidentId}?tab=interview`}>
-          Back to Incident
+          {t("results.notFound.back")}
         </Link>
       </Button>
     </div>

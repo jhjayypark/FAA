@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { FNSLocation, FNSLocationType } from "@/lib/types";
 import { useFAAStore } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,7 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const LOCATION_TYPES: FNSLocationType[] = ["Office", "Warehouse", "Logistics Hub", "Unknown"];
+/** Store values stay as typed FNSLocationType; labels resolve through t() at render. */
+const LOCATION_TYPES: { value: FNSLocationType; labelKey: string }[] = [
+  { value: "Office", labelKey: "incidents.locations.type.office" },
+  { value: "Warehouse", labelKey: "incidents.locations.type.warehouse" },
+  { value: "Logistics Hub", labelKey: "incidents.locations.type.logisticsHub" },
+  { value: "Unknown", labelKey: "incidents.locations.type.unknown" },
+];
 
 /**
  * Mini dialog for adding a custom FNS location. On save it persists the
@@ -38,6 +45,7 @@ export function AddLocationDialog({
   onOpenChange: (open: boolean) => void;
   onAdded: (location: FNSLocation) => void;
 }) {
+  const t = useT();
   const addCustomLocation = useFAAStore((s) => s.addCustomLocation);
 
   const [name, setName] = useState("");
@@ -78,7 +86,7 @@ export function AddLocationDialog({
       state: stateValue.trim(),
       type,
     });
-    toast.success("Location added.");
+    toast.success(t("incidents.toast.locationAdded"));
     onAdded(location);
     resetForm();
     onOpenChange(false);
@@ -88,38 +96,46 @@ export function AddLocationDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Add Location</DialogTitle>
+          <DialogTitle>{t("incidents.locations.dialogTitle")}</DialogTitle>
           <DialogDescription>
-            Add an FNS location that is not in the standard list.
+            {t("incidents.locations.dialogDescription")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="custom-location-name">Location name</Label>
+            <Label htmlFor="custom-location-name">
+              {t("incidents.locations.name")}
+            </Label>
             <Input
               id="custom-location-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="FNS - City, ST"
+              placeholder={t("incidents.locations.namePlaceholder")}
               aria-invalid={nameError || undefined}
               autoFocus
             />
             {nameError && (
-              <p className="text-xs text-destructive">Location name is required.</p>
+              <p className="text-xs text-destructive">
+                {t("incidents.locations.nameRequired")}
+              </p>
             )}
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="custom-location-address">Address</Label>
+            <Label htmlFor="custom-location-address">
+              {t("incidents.locations.address")}
+            </Label>
             <Input
               id="custom-location-address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Street, City, ST ZIP, US"
+              placeholder={t("incidents.locations.addressPlaceholder")}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
-              <Label htmlFor="custom-location-city">City</Label>
+              <Label htmlFor="custom-location-city">
+                {t("incidents.locations.city")}
+              </Label>
               <Input
                 id="custom-location-city"
                 value={city}
@@ -127,25 +143,29 @@ export function AddLocationDialog({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="custom-location-state">State</Label>
+              <Label htmlFor="custom-location-state">
+                {t("incidents.locations.state")}
+              </Label>
               <Input
                 id="custom-location-state"
                 value={stateValue}
                 onChange={(e) => setStateValue(e.target.value)}
-                placeholder="CA"
+                placeholder={t("incidents.locations.statePlaceholder")}
               />
             </div>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="custom-location-type">Type</Label>
+            <Label htmlFor="custom-location-type">
+              {t("incidents.locations.type")}
+            </Label>
             <Select value={type} onValueChange={(v) => setType(v as FNSLocationType)}>
               <SelectTrigger id="custom-location-type" className="w-full">
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={t("incidents.locations.typePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                {LOCATION_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
+                {LOCATION_TYPES.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -157,9 +177,9 @@ export function AddLocationDialog({
               variant="outline"
               onClick={() => handleOpenChange(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">{t("common.save")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

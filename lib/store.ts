@@ -19,11 +19,27 @@ type AddIncidentInput = {
   involvedLocationIds: string[];
 };
 
+export type InterfaceLanguage = "en" | "ko";
+
+export type AppSettings = {
+  /** UI labels language. Extracted/AI content stays Korean regardless. */
+  language: InterfaceLanguage;
+  displayName: string;
+};
+
+const DEFAULT_SETTINGS: AppSettings = {
+  language: "en",
+  displayName: "Jay Park",
+};
+
 type FAAState = {
   incidents: Incident[];
   customLocations: FNSLocation[];
   /** Assistant chat history, keyed by incident id. */
   assistantThreads: Record<string, ChatMessage[]>;
+  settings: AppSettings;
+  setLanguage: (language: InterfaceLanguage) => void;
+  setDisplayName: (displayName: string) => void;
   _hasHydrated: boolean;
   setHasHydrated: (v: boolean) => void;
 
@@ -82,6 +98,11 @@ export const useFAAStore = create<FAAState>()(
       incidents: [],
       customLocations: [],
       assistantThreads: {},
+      settings: DEFAULT_SETTINGS,
+      setLanguage: (language) =>
+        set((s) => ({ settings: { ...s.settings, language } })),
+      setDisplayName: (displayName) =>
+        set((s) => ({ settings: { ...s.settings, displayName } })),
       _hasHydrated: false,
       setHasHydrated: (v) => set({ _hasHydrated: v }),
 
@@ -254,7 +275,17 @@ export const useFAAStore = create<FAAState>()(
         incidents: s.incidents,
         customLocations: s.customLocations,
         assistantThreads: s.assistantThreads,
+        settings: s.settings,
       }),
+      // Older persisted states predate `settings`; backfill missing fields.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<FAAState>;
+        return {
+          ...current,
+          ...p,
+          settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) },
+        };
+      },
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },

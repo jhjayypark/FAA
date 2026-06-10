@@ -3,6 +3,7 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import type { ExtractionStage } from "@/lib/extraction/extract";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,15 @@ export const PIPELINE_STAGES: ExtractionStage[] = [
   "Scoring importance",
   "Attaching source citations",
 ];
+
+/** Dictionary keys for the stage values emitted by lib/extraction/extract.ts. */
+const STAGE_KEYS: Record<ExtractionStage, string> = {
+  "Parsing source files": "extraction.stage.parsing",
+  "Identifying interview structure": "extraction.stage.structure",
+  "Extracting Q&A pairs": "extraction.stage.extracting",
+  "Scoring importance": "extraction.stage.scoring",
+  "Attaching source citations": "extraction.stage.citations",
+};
 
 type ExtractionProgressProps = {
   status: "running" | "empty" | "error";
@@ -44,6 +54,7 @@ export function ExtractionProgress({
   onBackToFiles,
   onBackToRules,
 }: ExtractionProgressProps) {
+  const t = useT();
   if (status === "empty") {
     if (filteredOutCount > 0) {
       return (
@@ -56,19 +67,23 @@ export function ExtractionProgress({
               className="text-muted-foreground"
             />
             <div>
-              <h2 className="text-sm font-semibold">All Q&A pairs were filtered out</h2>
+              <h2 className="text-sm font-semibold">
+                {t("extraction.progress.filteredTitle")}
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {filteredOutCount === 1
-                  ? "1 Q&A pair was extracted, but it did not meet"
-                  : `${filteredOutCount} Q&A pairs were extracted, but none met`}{" "}
-                the bar for &quot;Extract most important insights only&quot;. Uncheck the
-                option in the rules step to keep all pairs.
+                  ? t("extraction.progress.filtered.one")
+                  : t("extraction.progress.filtered.many", {
+                      count: filteredOutCount,
+                    })}
               </p>
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <Button onClick={onBackToRules}>Back to rules</Button>
+              <Button onClick={onBackToRules}>
+                {t("extraction.progress.backToRules")}
+              </Button>
               <Button variant="outline" onClick={onBackToFiles}>
-                Back to files
+                {t("extraction.progress.backToFiles")}
               </Button>
             </div>
           </div>
@@ -85,14 +100,15 @@ export function ExtractionProgress({
             className="text-muted-foreground"
           />
           <div>
-            <h2 className="text-sm font-semibold">No Q&A pairs could be extracted</h2>
+            <h2 className="text-sm font-semibold">
+              {t("extraction.progress.emptyTitle")}
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              The files may not contain recognizable interview dialogue or notes. Review
-              the files and try again.
+              {t("extraction.progress.emptyDescription")}
             </p>
           </div>
           <Button variant="outline" className="mt-2" onClick={onBackToFiles}>
-            Back to files
+            {t("extraction.progress.backToFiles")}
           </Button>
         </div>
       </div>
@@ -110,15 +126,17 @@ export function ExtractionProgress({
             className="text-destructive"
           />
           <div>
-            <h2 className="text-sm font-semibold">Extraction failed</h2>
+            <h2 className="text-sm font-semibold">
+              {t("extraction.progress.errorTitle")}
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {errorMessage ?? "An unexpected error occurred during extraction."}
+              {errorMessage ?? t("extraction.progress.errorFallback")}
             </p>
           </div>
           <div className="mt-2 flex items-center gap-2">
-            <Button onClick={onRetry}>Retry</Button>
+            <Button onClick={onRetry}>{t("extraction.progress.retry")}</Button>
             <Button variant="outline" onClick={onBackToFiles}>
-              Back to files
+              {t("extraction.progress.backToFiles")}
             </Button>
           </div>
         </div>
@@ -131,15 +149,17 @@ export function ExtractionProgress({
   return (
     <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
-        <CardTitle className="text-base font-semibold">Extracting insights</CardTitle>
+        <CardTitle className="text-base font-semibold">
+          {t("extraction.progress.title")}
+        </CardTitle>
         <CardDescription className="text-sm">
-          Q&A pairs are being extracted from the uploaded files. Keep this page open.
+          {t("extraction.progress.description")}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
         <div>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium">{stage}</span>
+            <span className="text-sm font-medium">{t(STAGE_KEYS[stage])}</span>
             <span className="font-mono text-xs text-muted-foreground">{percent}%</span>
           </div>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -180,7 +200,7 @@ export function ExtractionProgress({
                     />
                   </span>
                 )}
-                {s}
+                {t(STAGE_KEYS[s])}
               </li>
             );
           })}

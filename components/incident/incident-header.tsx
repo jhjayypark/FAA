@@ -6,6 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon, Location01Icon } from "@hugeicons/core-free-icons";
 import type { Incident } from "@/lib/types";
 import { locationById, useAllLocations } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { formatDate, formatRelative } from "@/lib/format";
 import {
   Tooltip,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 
 function ContextPanel({ context }: { context: string }) {
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [clampable, setClampable] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -29,7 +31,7 @@ function ContextPanel({ context }: { context: string }) {
   return (
     <div className="rounded-md border border-border bg-muted/40 px-4 py-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Context
+        {t("incidentDetail.context.label")}
       </p>
       <p
         ref={textRef}
@@ -47,7 +49,9 @@ function ContextPanel({ context }: { context: string }) {
           onClick={() => setExpanded((v) => !v)}
           className="mt-1.5 text-xs font-medium text-primary transition-colors duration-150 hover:underline"
         >
-          {expanded ? "Show less" : "Show more"}
+          {expanded
+            ? t("incidentDetail.context.showLess")
+            : t("incidentDetail.context.showMore")}
         </button>
       )}
     </div>
@@ -55,6 +59,7 @@ function ContextPanel({ context }: { context: string }) {
 }
 
 export function IncidentHeader({ incident }: { incident: Incident }) {
+  const t = useT();
   const allLocations = useAllLocations();
   const locations = incident.involvedLocationIds
     .map((id) => locationById(allLocations, id))
@@ -67,7 +72,7 @@ export function IncidentHeader({ incident }: { incident: Incident }) {
         className="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} size={15} strokeWidth={1.8} />
-        Incidents
+        {t("incidentDetail.backToIncidents")}
       </Link>
 
       <h1 className="text-xl font-semibold tracking-tight">{incident.name}</h1>
@@ -96,8 +101,10 @@ export function IncidentHeader({ incident }: { incident: Incident }) {
       )}
 
       <p className="font-mono text-xs text-muted-foreground">
-        Created {formatDate(incident.createdAt)} · Updated{" "}
-        {formatRelative(incident.updatedAt)}
+        {t("incidentDetail.meta.createdUpdated", {
+          created: formatDate(incident.createdAt),
+          updated: formatRelative(incident.updatedAt),
+        })}
       </p>
 
       {incident.context && incident.context.trim().length > 0 && (

@@ -17,6 +17,7 @@ import type {
   UploadedFileSourceType,
 } from "@/lib/types";
 import { charCount } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,10 +29,11 @@ import {
 } from "@/components/ui/sheet";
 import { ImportanceBadge } from "@/components/importance-badge";
 
-const SOURCE_TYPE_LABELS: Record<UploadedFileSourceType, string> = {
-  transcript: "Transcript",
-  manual_notes: "Manual notes",
-  unknown: "Unknown",
+/** Dictionary keys per source type; resolved with t() at render time. */
+const SOURCE_TYPE_LABEL_KEYS: Record<UploadedFileSourceType, string> = {
+  transcript: "results.viewer.sourceType.transcript",
+  manual_notes: "results.viewer.sourceType.manualNotes",
+  unknown: "results.viewer.sourceType.unknown",
 };
 
 type HighlightSpan = { start: number; end: number };
@@ -138,6 +140,7 @@ export function SourceViewer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const [activeIndex, setActiveIndex] = useState(0);
   const [answerExpanded, setAnswerExpanded] = useState(false);
   const markRef = useRef<HTMLElement | null>(null);
@@ -187,12 +190,9 @@ export function SourceViewer({
               strokeWidth={1.8}
               className="text-muted-foreground"
             />
-            Source viewer
+            {t("results.viewer.title")}
           </SheetTitle>
-          <SheetDescription>
-            Citations for this finding and where they appear in the source
-            document.
-          </SheetDescription>
+          <SheetDescription>{t("results.viewer.description")}</SheetDescription>
         </SheetHeader>
 
         {item && (
@@ -235,7 +235,9 @@ export function SourceViewer({
                       className="mt-1 text-xs font-medium text-primary transition-colors duration-150 hover:underline"
                       onClick={() => setAnswerExpanded((v) => !v)}
                     >
-                      {answerExpanded ? "Show less" : "Show more"}
+                      {answerExpanded
+                        ? t("results.viewer.showLess")
+                        : t("results.viewer.showMore")}
                     </button>
                   )}
                 </div>
@@ -243,17 +245,20 @@ export function SourceViewer({
 
               <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Citations
+                  {t("results.viewer.citations")}
                 </h3>
                 {citations.length > 1 && (
                   <div className="flex items-center gap-1">
                     <span className="font-mono text-xs text-muted-foreground">
-                      Citation {safeIndex + 1} of {citations.length}
+                      {t("results.viewer.citationOf", {
+                        current: safeIndex + 1,
+                        total: citations.length,
+                      })}
                     </span>
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label="Previous citation"
+                      aria-label={t("results.viewer.prevCitation")}
                       disabled={safeIndex === 0}
                       onClick={() => setActiveIndex((i) => Math.max(0, i - 1))}
                     >
@@ -266,7 +271,7 @@ export function SourceViewer({
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label="Next citation"
+                      aria-label={t("results.viewer.nextCitation")}
                       disabled={safeIndex >= citations.length - 1}
                       onClick={() =>
                         setActiveIndex((i) =>
@@ -292,7 +297,7 @@ export function SourceViewer({
                     strokeWidth={1.8}
                     className="mt-0.5 shrink-0"
                   />
-                  No source citation found. Please review before using.
+                  {t("results.noCitationWarning")}
                 </div>
               ) : (
                 <div className="mt-2 space-y-2">
@@ -328,15 +333,15 @@ export function SourceViewer({
               {!activeCitation ? (
                 <PreviewPlaceholder
                   icon={FileSearchIcon}
-                  title="No document to preview"
-                  description="This finding has no source citations to display."
+                  title={t("results.viewer.noDocTitle")}
+                  description={t("results.viewer.noDocDescription")}
                 />
               ) : !file ? (
                 <PreviewPlaceholder
                   icon={Alert02Icon}
                   destructive
-                  title="Source file not found"
-                  description="The cited file is no longer part of this session."
+                  title={t("results.viewer.fileMissingTitle")}
+                  description={t("results.viewer.fileMissingDescription")}
                 />
               ) : (
                 <>
@@ -351,7 +356,7 @@ export function SourceViewer({
                       {file.fileName}
                     </span>
                     <span className="font-mono text-xs text-muted-foreground">
-                      {SOURCE_TYPE_LABELS[file.sourceType]}
+                      {t(SOURCE_TYPE_LABEL_KEYS[file.sourceType])}
                     </span>
                     <span className="font-mono text-xs text-muted-foreground">
                       {charCount(file.contentText)}
@@ -365,7 +370,7 @@ export function SourceViewer({
                         strokeWidth={1.8}
                         className="shrink-0"
                       />
-                      Could not locate exact quote in source document.
+                      {t("results.viewer.quoteNotFound")}
                     </div>
                   )}
                   <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">

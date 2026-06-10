@@ -10,8 +10,8 @@ import {
   PencilEdit02Icon,
 } from "@hugeicons/core-free-icons";
 import type { InterviewSession } from "@/lib/types";
-import { UNKNOWN_INTERVIEWEE } from "@/lib/types";
 import { useFAAStore } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ export function SessionHeader({
   incidentId: string;
   session: InterviewSession;
 }) {
+  const t = useT();
   const updateInterviewSession = useFAAStore((s) => s.updateInterviewSession);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -35,7 +36,7 @@ export function SessionHeader({
 
   const displayName = session.intervieweeName?.trim()
     ? session.intervieweeName.trim()
-    : UNKNOWN_INTERVIEWEE;
+    : t("results.header.unknownInterviewee");
   const fileCount = session.uploadedFiles.length;
   const findingCount = session.qaItems.length;
 
@@ -50,7 +51,7 @@ export function SessionHeader({
       intervieweeName: trimmed.length > 0 ? trimmed : undefined,
     });
     setEditing(false);
-    toast.success("Interviewee name updated.");
+    toast.success(t("results.header.nameUpdated"));
   }
 
   function startEditingDate() {
@@ -63,7 +64,7 @@ export function SessionHeader({
       interviewDate: dateDraft ? dateDraft : undefined,
     });
     setEditingDate(false);
-    toast.success("Session updated.");
+    toast.success(t("results.header.sessionUpdated"));
   }
 
   return (
@@ -73,11 +74,11 @@ export function SessionHeader({
         className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground"
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} size={14} strokeWidth={1.8} />
-        Back to incident
+        {t("results.header.back")}
       </Link>
 
       <p className="mt-4 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        Interview session
+        {t("results.header.eyebrow")}
       </p>
 
       {editing ? (
@@ -86,18 +87,18 @@ export function SessionHeader({
             autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Interviewee name"
-            aria-label="Interviewee name"
+            placeholder={t("results.header.intervieweeName")}
+            aria-label={t("results.header.intervieweeName")}
             onKeyDown={(e) => {
               if (e.key === "Enter") save();
               if (e.key === "Escape") setEditing(false);
             }}
           />
           <Button size="sm" onClick={save}>
-            Save
+            {t("common.save")}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         </div>
       ) : (
@@ -106,7 +107,7 @@ export function SessionHeader({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Edit interviewee name"
+            aria-label={t("results.header.editName")}
             onClick={startEditing}
           >
             <HugeiconsIcon icon={PencilEdit02Icon} size={14} strokeWidth={1.8} />
@@ -116,9 +117,23 @@ export function SessionHeader({
 
       <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-xs text-muted-foreground">
         <span>
-          Extracted {formatDateTime(session.createdAt)} &middot; {fileCount}{" "}
-          {fileCount === 1 ? "source file" : "source files"} &middot;{" "}
-          {findingCount} {findingCount === 1 ? "finding" : "findings"}
+          {t("results.header.extracted", {
+            datetime: formatDateTime(session.createdAt),
+          })}{" "}
+          &middot;{" "}
+          {t(
+            fileCount === 1
+              ? "results.header.sourceFiles.one"
+              : "results.header.sourceFiles.many",
+            { count: fileCount }
+          )}{" "}
+          &middot;{" "}
+          {t(
+            findingCount === 1
+              ? "results.header.findings.one"
+              : "results.header.findings.many",
+            { count: findingCount }
+          )}
         </span>
         <span aria-hidden="true">&middot;</span>
         {editingDate ? (
@@ -128,7 +143,7 @@ export function SessionHeader({
               type="date"
               value={dateDraft}
               onChange={(e) => setDateDraft(e.target.value)}
-              aria-label="Interview date"
+              aria-label={t("results.header.dateAria")}
               className="h-7 w-36 font-mono text-xs"
               onKeyDown={(e) => {
                 if (e.key === "Enter") saveDate();
@@ -141,7 +156,7 @@ export function SessionHeader({
               className="h-7 px-2 text-xs"
               onClick={saveDate}
             >
-              Save
+              {t("common.save")}
             </Button>
             <Button
               size="sm"
@@ -149,18 +164,20 @@ export function SessionHeader({
               className="h-7 px-2 text-xs"
               onClick={() => setEditingDate(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
           </span>
         ) : (
           <span className="inline-flex items-center gap-1">
             {session.interviewDate
-              ? `Interview ${formatDate(session.interviewDate)}`
-              : "No interview date"}
+              ? t("results.header.interviewDate", {
+                  date: formatDate(session.interviewDate),
+                })
+              : t("results.header.noInterviewDate")}
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Edit interview date"
+              aria-label={t("results.header.editDate")}
               className="size-6 text-muted-foreground"
               onClick={startEditingDate}
             >

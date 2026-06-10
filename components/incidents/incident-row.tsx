@@ -8,6 +8,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import type { FNSLocation, Incident } from "@/lib/types";
 import { useAllLocations, useFAAStore, locationById } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { formatDate, formatRelative } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ const MAX_VISIBLE_LOCATIONS = 3;
 
 /** One incident row inside the bordered incidents list. */
 export function IncidentRow({ incident }: { incident: Incident }) {
+  const t = useT();
   const router = useRouter();
   const allLocations = useAllLocations();
   const deleteIncident = useFAAStore((s) => s.deleteIncident);
@@ -46,7 +48,7 @@ export function IncidentRow({ incident }: { incident: Incident }) {
 
   function handleDelete() {
     deleteIncident(incident.id);
-    toast.success("Incident deleted.");
+    toast.success(t("incidents.toast.deleted"));
   }
 
   return (
@@ -73,18 +75,26 @@ export function IncidentRow({ incident }: { incident: Incident }) {
           ))}
           {hiddenCount > 0 && (
             <span className="inline-flex items-center rounded border bg-muted/50 px-1.5 py-0.5 text-[11px] text-muted-foreground">
-              +{hiddenCount} more
+              {t("incidents.row.moreLocations", { count: hiddenCount })}
             </span>
           )}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-xs text-muted-foreground">
-          <span>Created {formatDate(incident.createdAt)}</span>
-          <span aria-hidden="true">·</span>
           <span>
-            {sessionCount} {sessionCount === 1 ? "session" : "sessions"}
+            {t("incidents.row.created", { date: formatDate(incident.createdAt) })}
           </span>
           <span aria-hidden="true">·</span>
-          <span>Updated {formatRelative(incident.updatedAt)}</span>
+          <span>
+            {sessionCount === 1
+              ? t("incidents.row.sessions.one", { count: sessionCount })
+              : t("incidents.row.sessions.many", { count: sessionCount })}
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>
+            {t("incidents.row.updated", {
+              time: formatRelative(incident.updatedAt),
+            })}
+          </span>
         </div>
       </div>
 
@@ -93,11 +103,15 @@ export function IncidentRow({ incident }: { incident: Incident }) {
         onClick={(e) => e.stopPropagation()}
       >
         <Button asChild variant="outline" size="sm">
-          <Link href={href}>Open</Link>
+          <Link href={href}>{t("common.open")}</Link>
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label="Incident actions">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("incidents.row.actions")}
+            >
               <HugeiconsIcon icon={MoreHorizontalIcon} size={14} strokeWidth={1.8} />
             </Button>
           </DropdownMenuTrigger>
@@ -107,7 +121,7 @@ export function IncidentRow({ incident }: { incident: Incident }) {
               onSelect={() => setConfirmOpen(true)}
             >
               <HugeiconsIcon icon={Delete02Icon} size={14} strokeWidth={1.8} />
-              Delete incident
+              {t("incidents.row.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -115,16 +129,15 @@ export function IncidentRow({ incident }: { incident: Incident }) {
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete incident?</AlertDialogTitle>
+              <AlertDialogTitle>{t("incidents.delete.title")}</AlertDialogTitle>
               <AlertDialogDescription>
-                This permanently deletes &quot;{incident.name}&quot; along with all of
-                its interview sessions and findings. This action cannot be undone.
+                {t("incidents.delete.description", { name: incident.name })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
               <AlertDialogAction variant="destructive" onClick={handleDelete}>
-                Delete
+                {t("common.delete")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

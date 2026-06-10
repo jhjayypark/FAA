@@ -4,6 +4,7 @@ import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { FolderDetailsIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { useFAAStore, useHydrated } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddIncidentDialog } from "@/components/incidents/add-incident-dialog";
@@ -32,6 +33,7 @@ function IncidentListSkeleton() {
 }
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
+  const t = useT();
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border bg-card px-6 py-16 text-center">
       <HugeiconsIcon
@@ -40,20 +42,20 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         strokeWidth={1.5}
         className="text-muted-foreground"
       />
-      <h2 className="mt-4 text-sm font-semibold">No incidents yet</h2>
+      <h2 className="mt-4 text-sm font-semibold">{t("incidents.empty.title")}</h2>
       <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-        Create an incident to start organizing interviews, evidence, and audit
-        findings.
+        {t("incidents.empty.description")}
       </p>
       <Button className="mt-5" onClick={onAdd}>
         <HugeiconsIcon icon={PlusSignIcon} size={14} strokeWidth={1.8} />
-        Add Incident
+        {t("incidents.add")}
       </Button>
     </div>
   );
 }
 
 export default function IncidentsPage() {
+  const t = useT();
   const hydrated = useHydrated();
   const incidents = useFAAStore((s) => s.incidents);
   const [addOpen, setAddOpen] = useState(false);
@@ -62,14 +64,16 @@ export default function IncidentsPage() {
     <div className="mx-auto w-full max-w-5xl px-6 py-8">
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Incidents</h1>
+          <h1 className="text-xl font-semibold tracking-tight">
+            {t("incidents.title")}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage audit incidents, interviews, and findings.
+            {t("incidents.description")}
           </p>
         </div>
         <Button onClick={() => setAddOpen(true)} className="self-start md:shrink-0">
           <HugeiconsIcon icon={PlusSignIcon} size={14} strokeWidth={1.8} />
-          Add Incident
+          {t("incidents.add")}
         </Button>
       </div>
 

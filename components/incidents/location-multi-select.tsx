@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon, PlusSignIcon, UnfoldMoreIcon } from "@hugeicons/core-free-icons";
 import type { FNSLocation } from "@/lib/types";
 import { useAllLocations } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -28,6 +29,7 @@ export function LocationMultiSelect({
   value: string[];
   onChange: (ids: string[]) => void;
 }) {
+  const t = useT();
   const allLocations = useAllLocations();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -67,8 +69,10 @@ export function LocationMultiSelect({
           >
             <span className={value.length === 0 ? "text-muted-foreground" : undefined}>
               {value.length === 0
-                ? "Select locations"
-                : `${value.length} location${value.length === 1 ? "" : "s"} selected`}
+                ? t("incidents.locations.select")
+                : value.length === 1
+                  ? t("incidents.locations.selected.one", { count: value.length })
+                  : t("incidents.locations.selected.many", { count: value.length })}
             </span>
             <HugeiconsIcon
               icon={UnfoldMoreIcon}
@@ -83,9 +87,9 @@ export function LocationMultiSelect({
           align="start"
         >
           <Command>
-            <CommandInput placeholder="Search by name, city, or state" />
+            <CommandInput placeholder={t("incidents.locations.searchPlaceholder")} />
             <CommandList>
-              <CommandEmpty>No locations found.</CommandEmpty>
+              <CommandEmpty>{t("incidents.locations.empty")}</CommandEmpty>
               {allLocations.map((loc) => {
                 const selected = value.includes(loc.id);
                 return (
@@ -115,7 +119,7 @@ export function LocationMultiSelect({
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors duration-150 hover:bg-muted"
               >
                 <HugeiconsIcon icon={PlusSignIcon} size={14} strokeWidth={1.8} />
-                Add location
+                {t("incidents.locations.add")}
               </button>
             </div>
           </Command>
@@ -132,7 +136,7 @@ export function LocationMultiSelect({
               <span className="max-w-56 truncate">{loc.name}</span>
               <button
                 type="button"
-                aria-label={`Remove ${loc.name}`}
+                aria-label={t("incidents.locations.remove", { name: loc.name })}
                 onClick={() => remove(loc.id)}
                 className="rounded-sm p-0.5 text-muted-foreground transition-colors duration-150 hover:text-foreground"
               >

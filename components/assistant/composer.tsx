@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { SentIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/lib/i18n";
 
 /**
  * Message composer: autosizing textarea (1 to ~4 rows), Enter sends,
@@ -19,6 +20,7 @@ export function Composer({
   sending: boolean;
   onSend: (content: string) => void;
 }) {
+  const t = useT();
   const [value, setValue] = useState("");
   const canSend = !disabled && !sending && value.trim().length > 0;
 
@@ -42,15 +44,15 @@ export function Composer({
             }
           }}
           rows={1}
-          placeholder="Ask about this incident..."
-          aria-label="Ask about this incident"
+          placeholder={t("assistant.composerPlaceholder")}
+          aria-label={t("assistant.composerLabel")}
           disabled={disabled}
           className="max-h-28 min-h-9 flex-1 text-sm md:text-sm"
         />
         <Button
           size="icon"
           className="size-9"
-          aria-label="Send message"
+          aria-label={t("assistant.sendLabel")}
           disabled={!canSend}
           onClick={submit}
         >

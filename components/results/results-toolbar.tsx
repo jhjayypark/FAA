@@ -2,6 +2,7 @@
 
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PresentationBarChart01Icon } from "@hugeicons/core-free-icons";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -42,17 +43,22 @@ export function ResultsToolbar({
   totalCount: number;
   onGeneratePptx: () => void;
 }) {
+  const t = useT();
   return (
     <div className="sticky top-0 z-10 -mx-6 border-b bg-background/95 px-6 py-3 backdrop-blur">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Select value={sort} onValueChange={(v) => onSortChange(v as SortMode)}>
-          <SelectTrigger className="w-52" aria-label="Sort order">
+          <SelectTrigger className="w-52" aria-label={t("results.toolbar.sortAria")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="time">Time order</SelectItem>
-            <SelectItem value="importance-desc">Importance: High to Low</SelectItem>
-            <SelectItem value="importance-asc">Importance: Low to High</SelectItem>
+            <SelectItem value="time">{t("results.toolbar.sortTime")}</SelectItem>
+            <SelectItem value="importance-desc">
+              {t("results.toolbar.sortImportanceDesc")}
+            </SelectItem>
+            <SelectItem value="importance-asc">
+              {t("results.toolbar.sortImportanceAsc")}
+            </SelectItem>
           </SelectContent>
         </Select>
 
@@ -63,29 +69,34 @@ export function ResultsToolbar({
             onCheckedChange={(v) => onImportantOnlyChange(v === true)}
           />
           <Label htmlFor="important-only" className="text-xs font-medium">
-            Show important list only
+            {t("results.toolbar.importantOnly")}
           </Label>
         </div>
 
         <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="font-mono text-xs text-muted-foreground">
-            {includedCount} of {totalCount} in report
+            {t("results.inReportCount", {
+              selected: includedCount,
+              total: totalCount,
+            })}
           </span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <span tabIndex={0} className="inline-flex rounded-md">
                   <Button variant="outline" disabled>
-                    Export PDF
+                    {t("results.toolbar.exportPdf")}
                   </Button>
                 </span>
               </TooltipTrigger>
-              <TooltipContent>PDF export is coming in a future version.</TooltipContent>
+              <TooltipContent>
+                {t("results.toolbar.exportPdfTooltip")}
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
           <Button onClick={onGeneratePptx}>
             <HugeiconsIcon icon={PresentationBarChart01Icon} size={14} strokeWidth={1.8} />
-            Generate PPTX
+            {t("results.toolbar.generatePptx")}
           </Button>
         </div>
       </div>

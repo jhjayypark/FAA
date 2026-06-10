@@ -2,19 +2,25 @@
 
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tick02Icon } from "@hugeicons/core-free-icons";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const STEPS = ["Upload Files", "Extraction Rules", "Extract"] as const;
+const STEP_KEYS = [
+  "extraction.step.upload",
+  "extraction.step.rules",
+  "extraction.step.extract",
+] as const;
 
 /** Slim three-step header for the extraction guided flow. */
 export function ExtractionStepper({ currentIndex }: { currentIndex: number }) {
+  const t = useT();
   return (
-    <ol className="flex items-center gap-3" aria-label="Extraction steps">
-      {STEPS.map((label, i) => {
+    <ol className="flex items-center gap-3" aria-label={t("extraction.stepper.aria")}>
+      {STEP_KEYS.map((key, i) => {
         const done = i < currentIndex;
         const current = i === currentIndex;
         return (
-          <li key={label} className="flex min-w-0 items-center gap-3">
+          <li key={key} className="flex min-w-0 items-center gap-3">
             {i > 0 && <span aria-hidden="true" className="h-px w-6 shrink-0 bg-border sm:w-10" />}
             <span className="flex min-w-0 items-center gap-2">
               <span
@@ -38,7 +44,7 @@ export function ExtractionStepper({ currentIndex }: { currentIndex: number }) {
                   current ? "text-foreground" : "hidden text-muted-foreground sm:inline"
                 )}
               >
-                {label}
+                {t(key)}
               </span>
             </span>
           </li>

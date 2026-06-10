@@ -6,6 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Note01Icon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import type { Incident, OverviewEntry } from "@/lib/types";
 import { useFAAStore } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,6 +24,7 @@ function sortKey(entry: OverviewEntry): number {
 }
 
 export function OverviewTab({ incident }: { incident: Incident }) {
+  const t = useT();
   const addOverviewEntry = useFAAStore((s) => s.addOverviewEntry);
   const [draft, setDraft] = useState<EntryDraft>(() => emptyDraft());
 
@@ -35,14 +37,14 @@ export function OverviewTab({ incident }: { incident: Incident }) {
     if (!draft.title.trim()) return;
     addOverviewEntry(incident.id, draftToEntryFields(draft));
     setDraft(emptyDraft(draft.type));
-    toast.success("Entry added.");
+    toast.success(t("incidentDetail.toast.entryAdded"));
   };
 
   return (
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>New Entry</CardTitle>
+          <CardTitle>{t("incidentDetail.composer.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form
@@ -67,7 +69,7 @@ export function OverviewTab({ incident }: { incident: Incident }) {
                   strokeWidth={1.8}
                   data-icon="inline-start"
                 />
-                Add Entry
+                {t("incidentDetail.composer.add")}
               </Button>
             </div>
           </form>
@@ -84,10 +86,11 @@ export function OverviewTab({ incident }: { incident: Incident }) {
               className="text-muted-foreground"
             />
           </div>
-          <p className="mt-1 text-sm font-semibold">No entries yet</p>
+          <p className="mt-1 text-sm font-semibold">
+            {t("incidentDetail.entries.emptyTitle")}
+          </p>
           <p className="max-w-md text-sm text-muted-foreground">
-            Capture interview schedules, people involved, and timeline notes as
-            the investigation develops.
+            {t("incidentDetail.entries.emptyDescription")}
           </p>
         </div>
       ) : (

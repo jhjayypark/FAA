@@ -8,6 +8,7 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import type { OverviewEntry, OverviewEntryType } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,12 +40,18 @@ export const ENTRY_TYPE_ORDER: OverviewEntryType[] = [
 
 export const ENTRY_TYPE_META: Record<
   OverviewEntryType,
-  { label: string; icon: typeof UserIcon }
+  { labelKey: string; icon: typeof UserIcon }
 > = {
-  interview: { label: "Interview", icon: Calendar03Icon },
-  person: { label: "Person", icon: UserIcon },
-  timeline: { label: "Timeline", icon: GitCommitIcon },
-  note: { label: "Note", icon: StickyNote01Icon },
+  interview: {
+    labelKey: "incidentDetail.entryType.interview",
+    icon: Calendar03Icon,
+  },
+  person: { labelKey: "incidentDetail.entryType.person", icon: UserIcon },
+  timeline: {
+    labelKey: "incidentDetail.entryType.timeline",
+    icon: GitCommitIcon,
+  },
+  note: { labelKey: "incidentDetail.entryType.note", icon: StickyNote01Icon },
 };
 
 export function emptyDraft(type: OverviewEntryType = "interview"): EntryDraft {
@@ -127,11 +134,14 @@ export function EntryFields({
   idPrefix: string;
   autoFocusTitle?: boolean;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex flex-col gap-2 sm:w-36">
-          <Label htmlFor={`${idPrefix}-type`}>Type</Label>
+          <Label htmlFor={`${idPrefix}-type`}>
+            {t("incidentDetail.form.type")}
+          </Label>
           <Select
             value={draft.type}
             onValueChange={(v) => onChange({ type: v as OverviewEntryType })}
@@ -150,7 +160,7 @@ export function EntryFields({
                       strokeWidth={1.8}
                       className="text-muted-foreground"
                     />
-                    {meta.label}
+                    {t(meta.labelKey)}
                   </SelectItem>
                 );
               })}
@@ -158,13 +168,15 @@ export function EntryFields({
           </Select>
         </div>
         <div className="flex flex-1 flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-title`}>Title</Label>
+          <Label htmlFor={`${idPrefix}-title`}>
+            {t("incidentDetail.form.title")}
+          </Label>
           <Input
             id={`${idPrefix}-title`}
             autoFocus={autoFocusTitle}
             value={draft.title}
             onChange={(e) => onChange({ title: e.target.value })}
-            placeholder="Add interview date, related person, timeline note, or incident detail..."
+            placeholder={t("incidentDetail.form.titlePlaceholder")}
           />
         </div>
       </div>
@@ -172,7 +184,9 @@ export function EntryFields({
       {draft.type === "interview" && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <Label htmlFor={`${idPrefix}-datetime`}>Date and time</Label>
+            <Label htmlFor={`${idPrefix}-datetime`}>
+              {t("incidentDetail.form.dateTime")}
+            </Label>
             <Input
               id={`${idPrefix}-datetime`}
               type="datetime-local"
@@ -181,7 +195,9 @@ export function EntryFields({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor={`${idPrefix}-people`}>People</Label>
+            <Label htmlFor={`${idPrefix}-people`}>
+              {t("incidentDetail.form.people")}
+            </Label>
             <Input
               id={`${idPrefix}-people`}
               value={draft.people}
@@ -189,7 +205,7 @@ export function EntryFields({
               placeholder="김민수, 박지현"
             />
             <p className="text-xs text-muted-foreground">
-              Comma-separated names.
+              {t("incidentDetail.form.peopleHelp")}
             </p>
           </div>
         </div>
@@ -197,12 +213,14 @@ export function EntryFields({
 
       {draft.type === "person" && (
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-role`}>Role or team</Label>
+          <Label htmlFor={`${idPrefix}-role`}>
+            {t("incidentDetail.form.role")}
+          </Label>
           <Input
             id={`${idPrefix}-role`}
             value={draft.description}
             onChange={(e) => onChange({ description: e.target.value })}
-            placeholder="Warehouse supervisor, inbound team"
+            placeholder={t("incidentDetail.form.rolePlaceholder")}
           />
         </div>
       )}
@@ -210,7 +228,9 @@ export function EntryFields({
       {draft.type === "timeline" && (
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2 sm:max-w-xs">
-            <Label htmlFor={`${idPrefix}-datetime`}>Date and time</Label>
+            <Label htmlFor={`${idPrefix}-datetime`}>
+              {t("incidentDetail.form.dateTime")}
+            </Label>
             <Input
               id={`${idPrefix}-datetime`}
               type="datetime-local"
@@ -219,7 +239,9 @@ export function EntryFields({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor={`${idPrefix}-details`}>Details</Label>
+            <Label htmlFor={`${idPrefix}-details`}>
+              {t("incidentDetail.form.details")}
+            </Label>
             <Textarea
               id={`${idPrefix}-details`}
               rows={3}
@@ -232,7 +254,9 @@ export function EntryFields({
 
       {draft.type === "note" && (
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-details`}>Details</Label>
+          <Label htmlFor={`${idPrefix}-details`}>
+            {t("incidentDetail.form.details")}
+          </Label>
           <Textarea
             id={`${idPrefix}-details`}
             rows={3}

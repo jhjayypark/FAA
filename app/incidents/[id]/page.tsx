@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { useHydrated, useIncident } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,6 +37,7 @@ function IncidentDetailSkeleton() {
 }
 
 function IncidentNotFound() {
+  const t = useT();
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-8">
       <div className="flex flex-col items-center gap-2 rounded-md border border-border px-6 py-20 text-center">
@@ -47,12 +49,14 @@ function IncidentNotFound() {
             className="text-muted-foreground"
           />
         </div>
-        <p className="mt-1 text-sm font-semibold">Incident not found</p>
+        <p className="mt-1 text-sm font-semibold">
+          {t("incidentDetail.notFound.title")}
+        </p>
         <p className="max-w-md text-sm text-muted-foreground">
-          This incident may have been deleted or the link is incorrect.
+          {t("incidentDetail.notFound.description")}
         </p>
         <Button variant="outline" asChild className="mt-3">
-          <Link href="/incidents">Back to Incidents</Link>
+          <Link href="/incidents">{t("incidentDetail.notFound.back")}</Link>
         </Button>
       </div>
     </div>
@@ -64,6 +68,7 @@ function IncidentDetail({ id }: { id: string }) {
   const incident = useIncident(id);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useT();
 
   const tab = searchParams.get("tab") === "interview" ? "interview" : "overview";
 
@@ -97,8 +102,12 @@ function IncidentDetail({ id }: { id: string }) {
         <IncidentHeader incident={incident} />
         <Tabs value={tab} onValueChange={handleTabChange}>
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="interview">Interview</TabsTrigger>
+            <TabsTrigger value="overview">
+              {t("incidentDetail.tabs.overview")}
+            </TabsTrigger>
+            <TabsTrigger value="interview">
+              {t("incidentDetail.tabs.interview")}
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="mt-3">
             <OverviewTab incident={incident} />

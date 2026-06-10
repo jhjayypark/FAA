@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useFAAStore } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,6 +27,7 @@ export function AddIncidentDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const router = useRouter();
   const addIncident = useFAAStore((s) => s.addIncident);
 
@@ -58,7 +60,7 @@ export function AddIncidentDialog({
       context: context.trim() ? context.trim() : undefined,
       involvedLocationIds: locationIds,
     });
-    toast.success("Incident created.");
+    toast.success(t("incidents.toast.created"));
     resetForm();
     onOpenChange(false);
     router.push(`/incidents/${incident.id}`);
@@ -68,38 +70,38 @@ export function AddIncidentDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Incident</DialogTitle>
-          <DialogDescription>
-            Create an incident to organize interviews, evidence, and findings.
-          </DialogDescription>
+          <DialogTitle>{t("incidents.add")}</DialogTitle>
+          <DialogDescription>{t("incidents.addDialog.description")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="incident-name">Incident Name</Label>
+            <Label htmlFor="incident-name">{t("incidents.form.name")}</Label>
             <Input
               id="incident-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Example: Inventory discrepancy, Carson warehouse"
+              placeholder={t("incidents.form.namePlaceholder")}
               aria-invalid={nameError || undefined}
               autoFocus
             />
             {nameError && (
-              <p className="text-xs text-destructive">Incident name is required.</p>
+              <p className="text-xs text-destructive">
+                {t("incidents.form.nameRequired")}
+              </p>
             )}
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="incident-context">Incident Context</Label>
+            <Label htmlFor="incident-context">{t("incidents.form.context")}</Label>
             <Textarea
               id="incident-context"
               value={context}
               onChange={(e) => setContext(e.target.value)}
               rows={5}
-              placeholder="Describe what happened, why this audit is being opened, known background, relevant teams, timeline, or concerns."
+              placeholder={t("incidents.form.contextPlaceholder")}
             />
           </div>
           <div className="grid gap-2">
-            <Label>Involved FNS Locations</Label>
+            <Label>{t("incidents.form.locations")}</Label>
             <LocationMultiSelect value={locationIds} onChange={setLocationIds} />
           </div>
           <DialogFooter>
@@ -108,9 +110,9 @@ export function AddIncidentDialog({
               variant="outline"
               onClick={() => handleOpenChange(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
-            <Button type="submit">Create Incident</Button>
+            <Button type="submit">{t("incidents.form.submit")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

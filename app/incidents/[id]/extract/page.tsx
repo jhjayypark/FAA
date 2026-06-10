@@ -13,6 +13,7 @@ import {
   type UploadedInterviewFile,
 } from "@/lib/types";
 import { useFAAStore, useHydrated, useIncident } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { fileExtension, newId } from "@/lib/format";
 import { FileParseError, parseUploadedFile } from "@/lib/parse-files";
 import {
@@ -67,6 +68,7 @@ function PageSkeleton() {
 }
 
 function NotFoundState() {
+  const t = useT();
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-8">
       <div className="flex flex-col items-center gap-3 rounded-lg border border-border px-6 py-16 text-center">
@@ -77,13 +79,13 @@ function NotFoundState() {
           className="text-muted-foreground"
         />
         <div>
-          <h2 className="text-sm font-semibold">Incident not found</h2>
+          <h2 className="text-sm font-semibold">{t("extraction.notFound.title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            This incident may have been deleted or the link is incorrect.
+            {t("extraction.notFound.description")}
           </p>
         </div>
         <Button asChild variant="outline" className="mt-2">
-          <Link href="/incidents">Back to incidents</Link>
+          <Link href="/incidents">{t("extraction.notFound.back")}</Link>
         </Button>
       </div>
     </div>
@@ -93,6 +95,7 @@ function NotFoundState() {
 export default function ExtractPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const t = useT();
   const hydrated = useHydrated();
   const incident = useIncident(id);
   const addInterviewSession = useFAAStore((s) => s.addInterviewSession);
@@ -136,7 +139,7 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
           if (err instanceof FileParseError) {
             toast.error(err.message);
           } else {
-            toast.error(`Could not read ${file.name}.`);
+            toast.error(t("extraction.toast.readError", { fileName: file.name }));
           }
         })
         .finally(() => {
@@ -199,13 +202,12 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
           isManuallyEdited: false,
         })),
       });
-      toast.success("Extraction complete.");
+      toast.success(t("extraction.toast.complete"));
       router.replace(`/incidents/${id}/sessions/${session.id}`);
     } catch (err) {
       if (!alive.current) return;
-      setErrorMessage(
-        err instanceof Error ? err.message : "An unexpected error occurred."
-      );
+      // Non-Error throws fall back to the translated message in the progress view.
+      setErrorMessage(err instanceof Error ? err.message : null);
       setStep("error");
     } finally {
       inFlight.current = false;
@@ -239,12 +241,9 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
           </Link>
         )}
         <h1 className="mt-3 text-xl font-semibold tracking-tight">
-          Extract Interview Insights
+          {t("extraction.title")}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Upload interview material, confirm extraction rules, and generate cited Q&A
-          findings.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("extraction.subtitle")}</p>
       </header>
 
       <div className="mt-6 border-y border-border py-3">

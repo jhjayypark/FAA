@@ -13,6 +13,7 @@ import {
 import type { UploadedFileSourceType, UploadedInterviewFile } from "@/lib/types";
 import { ACCEPTED_FILE_TYPES } from "@/lib/parse-files";
 import { charCount } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,10 +39,10 @@ function iconForExtension(ext: string) {
   return FILE_ICONS[ext] ?? File01Icon;
 }
 
-const SOURCE_TYPE_LABELS: { value: UploadedFileSourceType; label: string }[] = [
-  { value: "transcript", label: "Transcript" },
-  { value: "manual_notes", label: "Manual Notes" },
-  { value: "unknown", label: "Unknown" },
+const SOURCE_TYPE_OPTIONS: { value: UploadedFileSourceType; labelKey: string }[] = [
+  { value: "transcript", labelKey: "extraction.upload.sourceType.transcript" },
+  { value: "manual_notes", labelKey: "extraction.upload.sourceType.manualNotes" },
+  { value: "unknown", labelKey: "extraction.upload.sourceType.unknown" },
 ];
 
 type UploadStepProps = {
@@ -61,6 +62,7 @@ export function UploadStep({
   onRemoveFile,
   onContinue,
 }: UploadStepProps) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -85,7 +87,7 @@ export function UploadStep({
       <div
         role="button"
         tabIndex={0}
-        aria-label="Upload interview files"
+        aria-label={t("extraction.upload.dropzoneAria")}
         onClick={() => inputRef.current?.click()}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -112,10 +114,10 @@ export function UploadStep({
           strokeWidth={1.5}
           className="text-muted-foreground"
         />
-        <p className="text-sm font-medium text-foreground">Drop files here or browse</p>
-        <p className="text-xs text-muted-foreground">
-          Supports .txt, .md, .docx, .pdf. Korean transcripts and manual notes.
+        <p className="text-sm font-medium text-foreground">
+          {t("extraction.upload.dropTitle")}
         </p>
+        <p className="text-xs text-muted-foreground">{t("extraction.upload.formats")}</p>
       </div>
       <input
         ref={inputRef}
@@ -126,7 +128,7 @@ export function UploadStep({
         onChange={handleInputChange}
       />
       <p className="text-xs text-muted-foreground">
-        Audio and video transcription is coming soon.
+        {t("extraction.upload.audioNote")}
       </p>
 
       {hasRows && (
@@ -159,14 +161,16 @@ export function UploadStep({
                     <SelectTrigger
                       size="sm"
                       className="w-32"
-                      aria-label={`Source type for ${file.fileName}`}
+                      aria-label={t("extraction.upload.sourceTypeAria", {
+                        fileName: file.fileName,
+                      })}
                     >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {SOURCE_TYPE_LABELS.map((opt) => (
+                      {SOURCE_TYPE_OPTIONS.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
+                          {t(opt.labelKey)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -174,7 +178,9 @@ export function UploadStep({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Remove ${file.fileName}`}
+                    aria-label={t("extraction.upload.removeAria", {
+                      fileName: file.fileName,
+                    })}
                     onClick={() => onRemoveFile(file.id)}
                   >
                     <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.8} />
@@ -200,7 +206,7 @@ export function UploadStep({
 
       <div className="flex justify-end pt-2">
         <Button onClick={onContinue} disabled={continueDisabled}>
-          Continue
+          {t("common.continue")}
         </Button>
       </div>
     </div>

@@ -12,8 +12,8 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import type { Incident, InterviewSession } from "@/lib/types";
-import { UNKNOWN_INTERVIEWEE } from "@/lib/types";
 import { useFAAStore } from "@/lib/store";
+import { useT } from "@/lib/i18n";
 import { formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ function SessionRow({
   incidentId: string;
   session: InterviewSession;
 }) {
+  const t = useT();
   const deleteInterviewSession = useFAAStore((s) => s.deleteInterviewSession);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -56,11 +57,12 @@ function SessionRow({
   const highCount = session.qaItems.filter(
     (qa) => qa.importance === "High"
   ).length;
-  const name = session.intervieweeName?.trim() || UNKNOWN_INTERVIEWEE;
+  const name =
+    session.intervieweeName?.trim() || t("incidentDetail.unknownInterviewee");
 
   const handleDelete = () => {
     deleteInterviewSession(incidentId, session.id);
-    toast.success("Interview session deleted.");
+    toast.success(t("incidentDetail.toast.sessionDeleted"));
   };
 
   return (
@@ -68,15 +70,21 @@ function SessionRow({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-foreground">{name}</p>
         <p className="mt-1 font-mono text-xs text-muted-foreground">
-          {formatDate(session.createdAt)} · {fileCount}{" "}
-          {fileCount === 1 ? "file" : "files"} · {qaCount} Q&amp;A · {highCount}{" "}
-          High
+          {formatDate(session.createdAt)} ·{" "}
+          {t(
+            fileCount === 1
+              ? "incidentDetail.session.files.one"
+              : "incidentDetail.session.files.many",
+            { count: fileCount }
+          )}{" "}
+          · {t("incidentDetail.session.qaCount", { count: qaCount })} ·{" "}
+          {t("incidentDetail.session.highCount", { count: highCount })}
         </p>
       </div>
 
       <Button variant="outline" asChild className="shrink-0">
         <Link href={`/incidents/${incidentId}/sessions/${session.id}`}>
-          Open
+          {t("common.open")}
         </Link>
       </Button>
 
@@ -85,7 +93,7 @@ function SessionRow({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Session actions"
+            aria-label={t("incidentDetail.session.rowActions")}
             className="shrink-0 text-muted-foreground"
           >
             <HugeiconsIcon icon={MoreHorizontalIcon} size={15} strokeWidth={1.8} />
@@ -97,7 +105,7 @@ function SessionRow({
             onSelect={() => setConfirmDelete(true)}
           >
             <HugeiconsIcon icon={Delete02Icon} size={14} strokeWidth={1.8} />
-            Delete
+            {t("common.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -105,17 +113,17 @@ function SessionRow({
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete interview session?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("incidentDetail.deleteSession.title")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove the session for {name}, including
-              its uploaded files and all extracted Q&amp;A items. This action
-              cannot be undone.
+              {t("incidentDetail.deleteSession.description", { name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -125,6 +133,7 @@ function SessionRow({
 }
 
 export function InterviewTab({ incident }: { incident: Incident }) {
+  const t = useT();
   const sessions = incident.interviewSessions;
 
   return (
@@ -142,20 +151,21 @@ export function InterviewTab({ incident }: { incident: Incident }) {
             </div>
             <div className="flex items-center gap-2">
               <CardTitle className="text-muted-foreground">
-                Prepare Interview Questions
+                {t("incidentDetail.prepare.title")}
               </CardTitle>
-              <Badge variant="secondary">Coming Soon</Badge>
+              <Badge variant="secondary">
+                {t("incidentDetail.prepare.comingSoon")}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Generate a structured Korean interview questionnaire based on
-              incident context, involved locations, and prior findings.
+              {t("incidentDetail.prepare.description")}
             </p>
           </CardContent>
           <CardFooter className="mt-auto">
             <Button variant="outline" disabled>
-              Prepare Questions
+              {t("incidentDetail.prepare.action")}
             </Button>
           </CardFooter>
         </Card>
@@ -170,19 +180,17 @@ export function InterviewTab({ incident }: { incident: Incident }) {
                 className="text-primary"
               />
             </div>
-            <CardTitle>Extract Interview Insights</CardTitle>
+            <CardTitle>{t("incidentDetail.extract.title")}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Upload Korean interview transcripts and/or manual notes to
-              extract factual Q&amp;A pairs, source citations, and report-ready
-              findings.
+              {t("incidentDetail.extract.description")}
             </p>
           </CardContent>
           <CardFooter className="mt-auto">
             <Button asChild>
               <Link href={`/incidents/${incident.id}/extract`}>
-                Start Extraction
+                {t("incidentDetail.extract.action")}
               </Link>
             </Button>
           </CardFooter>
@@ -191,7 +199,9 @@ export function InterviewTab({ incident }: { incident: Incident }) {
 
       <div className="flex flex-col gap-3">
         <div className="flex items-baseline gap-2">
-          <h2 className="text-sm font-semibold">Interview Sessions</h2>
+          <h2 className="text-sm font-semibold">
+            {t("incidentDetail.sessions.title")}
+          </h2>
           {sessions.length > 0 && (
             <span className="font-mono text-xs text-muted-foreground">
               {sessions.length}
@@ -210,10 +220,10 @@ export function InterviewTab({ incident }: { incident: Incident }) {
               />
             </div>
             <p className="mt-1 text-sm font-semibold">
-              No interview sessions yet
+              {t("incidentDetail.sessions.emptyTitle")}
             </p>
             <p className="max-w-md text-sm text-muted-foreground">
-              Extracted interviews will appear here.
+              {t("incidentDetail.sessions.emptyDescription")}
             </p>
           </div>
         ) : (

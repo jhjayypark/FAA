@@ -3,6 +3,7 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { SecurityCheckIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { MANDATORY_EXTRACTION_RULES } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,17 +29,20 @@ export function RulesStep({
   onBack,
   onExtract,
 }: RulesStepProps) {
+  const t = useT();
   return (
     <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
-        <CardTitle className="text-base font-semibold">Extraction Rules</CardTitle>
+        <CardTitle className="text-base font-semibold">
+          {t("extraction.rules.title")}
+        </CardTitle>
         <CardDescription className="text-sm">
-          How Q&A should be extracted from the source material.
+          {t("extraction.rules.subtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <Label>Style preset</Label>
+          <Label>{t("extraction.rules.stylePreset")}</Label>
           <div className="flex items-center gap-2.5 rounded-md border border-border px-3 py-2.5">
             <HugeiconsIcon
               icon={SecurityCheckIcon}
@@ -46,15 +50,19 @@ export function RulesStep({
               strokeWidth={1.8}
               className="shrink-0 text-primary"
             />
-            <span className="text-sm font-medium">Strict factual extraction</span>
+            <span className="text-sm font-medium">
+              {t("extraction.rules.strictFactual")}
+            </span>
             <span className="ml-auto rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground">
-              Required
+              {t("extraction.rules.required")}
             </span>
           </div>
         </div>
 
         <div className="rounded-lg border border-border bg-muted/30 p-4">
-          <h3 className="text-sm font-semibold">Mandatory rules (non-negotiable)</h3>
+          <h3 className="text-sm font-semibold">
+            {t("extraction.rules.mandatoryHeading")}
+          </h3>
           <ol className="mt-3 flex flex-col gap-2.5">
             {MANDATORY_EXTRACTION_RULES.map((rule, i) => (
               <li key={rule} className="flex items-start gap-2.5">
@@ -82,21 +90,19 @@ export function RulesStep({
           />
           <div className="flex flex-col gap-1">
             <Label htmlFor="important-only" className="text-sm font-medium">
-              Extract most important insights only
+              {t("extraction.rules.importantOnly")}
             </Label>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Only Q&A pairs most relevant to this incident are extracted. Every item
-              still carries source citations. When off, all Q&A pairs are extracted and
-              marked with importance.
+              {t("extraction.rules.importantOnlyHelp")}
             </p>
           </div>
         </div>
       </CardContent>
       <CardFooter className="justify-between border-t">
         <Button variant="outline" onClick={onBack}>
-          Back
+          {t("common.back")}
         </Button>
-        <Button onClick={onExtract}>Extract Insights</Button>
+        <Button onClick={onExtract}>{t("extraction.rules.extract")}</Button>
       </CardFooter>
     </Card>
   );

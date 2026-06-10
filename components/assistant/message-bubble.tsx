@@ -2,6 +2,7 @@
 
 import type { ChatMessage } from "@/lib/types";
 import { formatDateTime } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /** A single chat bubble: user right-aligned, assistant left-aligned. */
@@ -27,11 +28,12 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
 
 /** Left-aligned pending bubble shown while a reply is being computed. */
 export function ThinkingBubble() {
+  const t = useT();
   return (
     <div className="flex flex-col items-start">
       <div className="max-w-[85%] rounded-lg border bg-card px-4 py-3">
         <span className="animate-pulse text-xs text-muted-foreground">
-          Analyzing incident materials...
+          {t("assistant.thinking")}
         </span>
       </div>
     </div>
