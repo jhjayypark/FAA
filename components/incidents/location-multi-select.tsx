@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
+  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
@@ -17,10 +18,31 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AddLocationDialog } from "@/components/incidents/add-location-dialog";
 
+/** Dropdown group per country, custom locations last. */
+const GROUP_ORDER = ["us", "canada", "mexico", "panama", "custom"] as const;
+type LocationGroup = (typeof GROUP_ORDER)[number];
+
+const GROUP_LABEL_KEYS: Record<LocationGroup, string> = {
+  us: "incidents.locations.group.us",
+  canada: "incidents.locations.group.canada",
+  mexico: "incidents.locations.group.mexico",
+  panama: "incidents.locations.group.panama",
+  custom: "incidents.locations.group.custom",
+};
+
+function groupOf(loc: FNSLocation): LocationGroup {
+  if (loc.isCustom) return "custom";
+  if (["ON", "BC", "QC"].includes(loc.state)) return "canada";
+  if (loc.state === "NL") return "mexico";
+  if (loc.state === "Panama") return "panama";
+  return "us";
+}
+
 /**
- * Multi-select for FNS locations: searchable dropdown (Popover + Command),
- * removable chips for the current selection, and a fixed "Add location" row
- * that opens a mini dialog for custom locations.
+ * Multi-select for FNS locations: searchable dropdown (Popover + Command)
+ * grouped by country and sorted by name, removable chips for the current
+ * selection, and a fixed "Add location" row that opens a mini dialog for
+ * custom locations.
  */
 export function LocationMultiSelect({
   value,
@@ -90,22 +112,35 @@ export function LocationMultiSelect({
             <CommandInput placeholder={t("incidents.locations.searchPlaceholder")} />
             <CommandList>
               <CommandEmpty>{t("incidents.locations.empty")}</CommandEmpty>
-              {allLocations.map((loc) => {
-                const selected = value.includes(loc.id);
+              {GROUP_ORDER.map((group) => {
+                const members = allLocations
+                  .filter((loc) => groupOf(loc) === group)
+                  .sort((a, b) => a.name.localeCompare(b.name));
+                if (members.length === 0) return null;
                 return (
-                  <CommandItem
-                    key={loc.id}
-                    value={`${loc.name} ${loc.city} ${loc.state} ${loc.id}`}
-                    data-checked={selected}
-                    onSelect={() => toggle(loc.id)}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm text-foreground">{loc.name}</div>
-                      <div className="truncate text-xs text-muted-foreground">
-                        {loc.address || `${loc.city}${loc.city && loc.state ? ", " : ""}${loc.state}`}
-                      </div>
-                    </div>
-                  </CommandItem>
+                  <CommandGroup key={group} heading={t(GROUP_LABEL_KEYS[group])}>
+                    {members.map((loc) => {
+                      const selected = value.includes(loc.id);
+                      return (
+                        <CommandItem
+                          key={loc.id}
+                          value={`${loc.name} ${loc.city} ${loc.state} ${loc.id}`}
+                          data-checked={selected}
+                          onSelect={() => toggle(loc.id)}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm text-foreground">
+                              {loc.name}
+                            </div>
+                            <div className="truncate text-xs text-muted-foreground">
+                              {loc.address ||
+                                `${loc.city}${loc.city && loc.state ? ", " : ""}${loc.state}`}
+                            </div>
+                          </div>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
                 );
               })}
             </CommandList>

@@ -81,6 +81,11 @@ export const INCIDENTS = {
   "incidents.locations.empty": { en: "No locations found.", ko: "검색 결과가 없습니다." },
   "incidents.locations.add": { en: "Add location", ko: "사업장 추가" },
   "incidents.locations.remove": { en: "Remove {name}", ko: "{name} 제거" },
+  "incidents.locations.group.us": { en: "United States", ko: "미국" },
+  "incidents.locations.group.canada": { en: "Canada", ko: "캐나다" },
+  "incidents.locations.group.mexico": { en: "Mexico", ko: "멕시코" },
+  "incidents.locations.group.panama": { en: "Panama", ko: "파나마" },
+  "incidents.locations.group.custom": { en: "Custom locations", ko: "직접 추가한 사업장" },
 
   // Add Location mini dialog
   "incidents.locations.dialogTitle": { en: "Add Location", ko: "사업장 추가" },
