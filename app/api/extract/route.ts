@@ -256,6 +256,9 @@ export async function POST(request: Request) {
     return NextResponse.json(toExtractionResult(llm, body.uploadedFiles, body.settings));
   } catch (err) {
     if (err instanceof Anthropic.APIError) {
+      // Surfaces the real cause (billing, schema, rate limit) in server logs;
+      // the client only needs to know to fall back.
+      console.error(`Anthropic API error ${err.status}: ${err.message}`);
       const status = err.status === 429 || err.status === 529 ? 503 : 502;
       return NextResponse.json(
         { error: `Extraction service error (${err.status ?? "network"}).` },
