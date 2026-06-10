@@ -16,6 +16,7 @@ import { useFAAStore, useHydrated, useIncident } from "@/lib/store";
 import { useT } from "@/lib/i18n";
 import { fileExtension, newId } from "@/lib/format";
 import { FileParseError, parseUploadedFile } from "@/lib/parse-files";
+import { detectIntervieweeName } from "@/lib/extraction/detect-interviewee";
 import {
   extractInterviewInsights,
   type ExtractionStage,
@@ -23,7 +24,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtractionStepper } from "@/components/extraction/extraction-stepper";
-import { UploadStep, type ParsingFile } from "@/components/extraction/upload-step";
+import {
+  UploadStep,
+  type IntervieweeGroup,
+  type ParsingFile,
+} from "@/components/extraction/upload-step";
 import { RulesStep } from "@/components/extraction/rules-step";
 import {
   ExtractionProgress,
@@ -101,13 +106,16 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
   const addInterviewSession = useFAAStore((s) => s.addInterviewSession);
 
   const [step, setStep] = useState<FlowStep>("upload");
-  const [files, setFiles] = useState<UploadedInterviewFile[]>([]);
+  const [groups, setGroups] = useState<IntervieweeGroup[]>(() => [
+    { id: newId(), name: "", files: [] },
+  ]);
   const [parsingFiles, setParsingFiles] = useState<ParsingFile[]>([]);
   const [importantOnly, setImportantOnly] = useState(false);
   const [stage, setStage] = useState<ExtractionStage>(PIPELINE_STAGES[0]);
   const [percent, setPercent] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filteredOutCount, setFilteredOutCount] = useState(0);
+  const [groupLabel, setGroupLabel] = useState<string | null>(null);
 
   const alive = useRef(true);
   const inFlight = useRef(false);
@@ -118,22 +126,44 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
     []
   );
 
-  function handleAddFiles(selected: File[]) {
+  /** Best-effort interviewee name from a newly added file, for unnamed groups. */
+  function suggestGroupName(file: UploadedInterviewFile): string {
+    if (file.fileType === "link") {
+      return file.fileName.replace(/\s*\(Plaud\)\s*$/i, "").trim();
+    }
+    return (
+      detectIntervieweeName([file]) ??
+      file.fileName.replace(/\.[^.]+$/, "").trim()
+    );
+  }
+
+  function appendFileToGroup(groupId: string, file: UploadedInterviewFile) {
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === groupId
+          ? {
+              ...g,
+              files: [...g.files, file],
+              name: g.name.trim() ? g.name : suggestGroupName(file),
+            }
+          : g
+      )
+    );
+  }
+
+  function handleAddFiles(groupId: string, selected: File[]) {
     selected.forEach((file) => {
       const key = newId();
-      setParsingFiles((prev) => [...prev, { key, fileName: file.name }]);
+      setParsingFiles((prev) => [...prev, { key, fileName: file.name, groupId }]);
       parseUploadedFile(file)
         .then((contentText) => {
-          setFiles((prev) => [
-            ...prev,
-            {
-              id: newId(),
-              fileName: file.name,
-              fileType: fileExtension(file.name),
-              contentText,
-              sourceType: guessSourceType(file.name),
-            },
-          ]);
+          appendFileToGroup(groupId, {
+            id: newId(),
+            fileName: file.name,
+            fileType: fileExtension(file.name),
+            contentText,
+            sourceType: guessSourceType(file.name),
+          });
         })
         .catch((err: unknown) => {
           if (err instanceof FileParseError) {
@@ -148,7 +178,7 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
     });
   }
 
-  async function handleAddLink(url: string) {
+  async function handleAddLink(groupId: string, url: string) {
     let hostname: string;
     try {
       const parsed = new URL(url);
@@ -159,7 +189,7 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
       return;
     }
     const key = newId();
-    setParsingFiles((prev) => [...prev, { key, fileName: hostname }]);
+    setParsingFiles((prev) => [...prev, { key, fileName: hostname, groupId }]);
     try {
       const res = await fetch("/api/import-link", {
         method: "POST",
@@ -183,16 +213,13 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
           contentText = lines.join("\n");
         }
       }
-      setFiles((prev) => [
-        ...prev,
-        {
-          id: newId(),
-          fileName: data.fileName,
-          fileType: "link",
-          contentText,
-          sourceType: data.sourceType === "transcript" ? "transcript" : "unknown",
-        },
-      ]);
+      appendFileToGroup(groupId, {
+        id: newId(),
+        fileName: data.fileName,
+        fileType: "link",
+        contentText,
+        sourceType: data.sourceType === "transcript" ? "transcript" : "unknown",
+      });
       toast.success(t("extraction.upload.linkAdded"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("extraction.upload.linkInvalid"));
@@ -201,14 +228,39 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
     }
   }
 
-  function handleSourceTypeChange(fileId: string, sourceType: UploadedFileSourceType) {
-    setFiles((prev) =>
-      prev.map((f) => (f.id === fileId ? { ...f, sourceType } : f))
+  function handleSourceTypeChange(
+    groupId: string,
+    fileId: string,
+    sourceType: UploadedFileSourceType
+  ) {
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === groupId
+          ? { ...g, files: g.files.map((f) => (f.id === fileId ? { ...f, sourceType } : f)) }
+          : g
+      )
     );
   }
 
-  function handleRemoveFile(fileId: string) {
-    setFiles((prev) => prev.filter((f) => f.id !== fileId));
+  function handleRemoveFile(groupId: string, fileId: string) {
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === groupId ? { ...g, files: g.files.filter((f) => f.id !== fileId) } : g
+      )
+    );
+  }
+
+  function handleNameChange(groupId: string, name: string) {
+    setGroups((prev) => prev.map((g) => (g.id === groupId ? { ...g, name } : g)));
+  }
+
+  function handleAddGroup() {
+    setGroups((prev) => [...prev, { id: newId(), name: "", files: [] }]);
+  }
+
+  function handleRemoveGroup(groupId: string) {
+    setGroups((prev) => prev.filter((g) => g.id !== groupId));
+    setParsingFiles((prev) => prev.filter((p) => p.groupId !== groupId));
   }
 
   async function startExtraction() {
@@ -220,43 +272,90 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
       importantOnly,
       rules: [...MANDATORY_EXTRACTION_RULES],
     };
+    const activeGroups = groups.filter((g) => g.files.length > 0);
     setStep("running");
     setStage(PIPELINE_STAGES[0]);
     setPercent(0);
     setErrorMessage(null);
     setFilteredOutCount(0);
     try {
-      const result = await extractInterviewInsights({
-        incident,
-        overviewEntries: incident.overviewEntries,
-        uploadedFiles: files,
-        settings,
-        onProgress: (s, p) => {
-          if (!alive.current) return;
-          setStage(s);
-          setPercent(p);
-        },
-      });
+      const created: { id: string }[] = [];
+      const skipped: { name: string; prefilterCount: number }[] = [];
+
+      for (let gi = 0; gi < activeGroups.length; gi++) {
+        const group = activeGroups[gi];
+        const displayName =
+          group.name.trim() || t("extraction.upload.group.unnamed");
+        if (activeGroups.length > 1) {
+          setGroupLabel(
+            t("extraction.progress.group", {
+              current: gi + 1,
+              total: activeGroups.length,
+              name: displayName,
+            })
+          );
+        }
+        setStage(PIPELINE_STAGES[0]);
+        setPercent(0);
+
+        const result = await extractInterviewInsights({
+          incident,
+          overviewEntries: incident.overviewEntries,
+          uploadedFiles: group.files,
+          settings,
+          onProgress: (s, p) => {
+            if (!alive.current) return;
+            setStage(s);
+            setPercent(p);
+          },
+        });
+        if (!alive.current) return;
+
+        if (result.qaItems.length === 0) {
+          skipped.push({ name: displayName, prefilterCount: result.prefilterCount });
+          continue;
+        }
+        const session = addInterviewSession(incident.id, {
+          intervieweeName:
+            group.name.trim() || result.intervieweeName || undefined,
+          interviewDate: result.interviewDate ?? undefined,
+          uploadedFiles: group.files,
+          extractionSettings: settings,
+          qaItems: result.qaItems.map((q, i) => ({
+            ...q,
+            id: newId(),
+            orderIndex: i,
+            isManuallyEdited: false,
+          })),
+        });
+        created.push(session);
+      }
       if (!alive.current) return;
-      if (result.qaItems.length === 0) {
-        setFilteredOutCount(result.prefilterCount);
+
+      if (created.length === 0) {
+        // Nothing extracted anywhere: distinguish filtered-out from empty.
+        setFilteredOutCount(skipped.reduce((n, s) => n + s.prefilterCount, 0));
+        setGroupLabel(null);
         setStep("empty");
         return;
       }
-      const session = addInterviewSession(incident.id, {
-        intervieweeName: result.intervieweeName ?? undefined,
-        interviewDate: result.interviewDate ?? undefined,
-        uploadedFiles: files,
-        extractionSettings: settings,
-        qaItems: result.qaItems.map((q, i) => ({
-          ...q,
-          id: newId(),
-          orderIndex: i,
-          isManuallyEdited: false,
-        })),
-      });
-      toast.success(t("extraction.toast.complete"));
-      router.replace(`/incidents/${id}/sessions/${session.id}`);
+
+      if (skipped.length > 0) {
+        toast.warning(
+          t("extraction.toast.skippedGroups", {
+            names: skipped.map((s) => s.name).join(", "),
+          })
+        );
+      }
+      if (created.length === 1 && skipped.length === 0) {
+        toast.success(t("extraction.toast.complete"));
+        router.replace(`/incidents/${id}/sessions/${created[0].id}`);
+      } else {
+        toast.success(
+          t("extraction.toast.sessionsCreated", { count: created.length })
+        );
+        router.replace(`/incidents/${id}?tab=interview`);
+      }
     } catch (err) {
       if (!alive.current) return;
       // Non-Error throws fall back to the translated message in the progress view.
@@ -306,10 +405,13 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
       <div className="mt-8">
         {step === "upload" && (
           <UploadStep
-            files={files}
+            groups={groups}
             parsingFiles={parsingFiles}
             onAddFiles={handleAddFiles}
             onAddLink={handleAddLink}
+            onNameChange={handleNameChange}
+            onAddGroup={handleAddGroup}
+            onRemoveGroup={handleRemoveGroup}
             onSourceTypeChange={handleSourceTypeChange}
             onRemoveFile={handleRemoveFile}
             onContinue={() => setStep("rules")}
@@ -330,6 +432,7 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
             percent={percent}
             errorMessage={errorMessage}
             filteredOutCount={filteredOutCount}
+            groupLabel={groupLabel}
             onRetry={startExtraction}
             onBackToFiles={() => setStep("upload")}
             onBackToRules={() => setStep("rules")}

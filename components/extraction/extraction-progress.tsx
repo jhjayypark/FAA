@@ -39,6 +39,8 @@ type ExtractionProgressProps = {
   errorMessage: string | null;
   /** Q&A pairs extracted before the importance filter removed them all. */
   filteredOutCount: number;
+  /** "Interviewee 2 of 4: name" line when extracting multiple groups. */
+  groupLabel?: string | null;
   onRetry: () => void;
   onBackToFiles: () => void;
   onBackToRules: () => void;
@@ -50,6 +52,7 @@ export function ExtractionProgress({
   percent,
   errorMessage,
   filteredOutCount,
+  groupLabel,
   onRetry,
   onBackToFiles,
   onBackToRules,
@@ -157,6 +160,9 @@ export function ExtractionProgress({
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
+        {groupLabel && (
+          <p className="font-mono text-xs text-muted-foreground">{groupLabel}</p>
+        )}
         <div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm font-medium">{t(STAGE_KEYS[stage])}</span>

@@ -74,6 +74,39 @@ export const EXTRACTION = {
     ko: "올바른 http(s) 링크를 입력하십시오.",
   },
   "extraction.upload.linkAdded": { en: "Link imported.", ko: "링크를 가져왔습니다." },
+  "extraction.upload.group.heading": { en: "Interviewees", ko: "면담자" },
+  "extraction.upload.group.description": {
+    en: "Group each interviewee's transcripts and notes together. Each interviewee becomes a separate interview session.",
+    ko: "면담자별로 녹취록과 메모를 묶어 주십시오. 면담자마다 별도의 인터뷰 세션이 생성됩니다.",
+  },
+  "extraction.upload.group.namePlaceholder": { en: "Interviewee name", ko: "면담자 이름" },
+  "extraction.upload.group.nameAria": {
+    en: "Interviewee {index} name",
+    ko: "면담자 {index} 이름",
+  },
+  "extraction.upload.group.unnamed": { en: "Unnamed interviewee", ko: "이름 미지정" },
+  "extraction.upload.group.addPerson": { en: "Add interviewee", ko: "면담자 추가" },
+  "extraction.upload.group.removeAria": {
+    en: "Remove interviewee {name}",
+    ko: "면담자 {name} 제거",
+  },
+  "extraction.upload.group.addFiles": { en: "Add files", ko: "파일 추가" },
+  "extraction.upload.group.empty": {
+    en: "No files yet. Add this interviewee's transcripts, notes, or a share link. You can also drop files on this card.",
+    ko: "아직 파일이 없습니다. 이 면담자의 녹취록, 메모 또는 공유 링크를 추가하십시오. 카드 위로 파일을 끌어다 놓을 수도 있습니다.",
+  },
+  "extraction.progress.group": {
+    en: "Interviewee {current} of {total}: {name}",
+    ko: "면담자 {current}/{total}: {name}",
+  },
+  "extraction.toast.sessionsCreated": {
+    en: "{count} interview sessions created.",
+    ko: "인터뷰 세션 {count}건이 생성되었습니다.",
+  },
+  "extraction.toast.skippedGroups": {
+    en: "No Q&A could be extracted for: {names}",
+    ko: "다음 면담자에서 추출된 Q&A가 없습니다: {names}",
+  },
   "extraction.upload.sourceType.transcript": {
     en: "Transcript",
     ko: "녹취록",
