@@ -25,6 +25,11 @@ import {
   INTERVIEWER_LABELS,
 } from "@/lib/extraction/detect-interviewee";
 import { condenseAnswer, condenseQuestion } from "@/lib/extraction/condense";
+import {
+  isQuestionLike,
+  STOPWORDS,
+  topicOverlap,
+} from "@/lib/extraction/text-heuristics";
 
 type Line = { text: string; start: number; end: number };
 
@@ -35,6 +40,14 @@ type RawQA = {
   timestampLabel?: string;
   /** Order of appearance: fileIndex * 10000 + lineIndex, used to keep time order. */
   sortKey: number;
+  /** Written notes state the main question FIRST; spoken speech restates it last. */
+  preferFirstQuestion?: boolean;
+  /**
+   * Combined original answers after a cross-source merge (transcript + note),
+   * used for importance scoring so both sides contribute keyword signal.
+   * Display still uses `answer`.
+   */
+  scoringAnswer?: string;
 };
 
 const Q_MARKER = /^\s*(?:Q\d*\s*[.:)\]]|질문\s*\d*\s*[.:)]|문\s*[.:)])\s*/i;
@@ -64,11 +77,6 @@ export const MEDIUM_KEYWORDS = [
 
 const MONEY = /\d[\d,.]*\s*(?:원|달러|불|USD|KRW)|\$\s?\d[\d,.]*/;
 const QUANTITY = /\d[\d,.]*\s*(?:박스|팔레트|개|건|회|%)/;
-
-const STOPWORDS = new Set([
-  "있다", "없다", "한다", "있는", "대한", "관련", "그리고", "하지만", "그래서",
-  "the", "and", "for", "with", "this", "that", "from",
-]);
 
 function splitLines(content: string): Line[] {
   const lines: Line[] = [];
@@ -132,6 +140,30 @@ function cleanQuestion(text: string): string {
 
 function isInterviewer(label: string): boolean {
   return INTERVIEWER_LABELS.has(label.trim().toLowerCase());
+}
+
+const TIMESTAMP_GLOBAL = new RegExp(TIMESTAMP.source, "g");
+
+/** Removes every inline "(0:34)"-style timestamp and normalizes whitespace. */
+function stripTimestamps(text: string): string {
+  return text.replace(TIMESTAMP_GLOBAL, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Content-free acknowledgements and closings ("알겠습니다. 협조 감사합니다.").
+ * A non-question interviewer turn made ONLY of these is real interviewer
+ * speech, not a mislabeled answer continuation, so it is never folded into the
+ * preceding answer.
+ */
+const ACK_SENTENCE =
+  /^(?:네|예|아|어|음|좋습니다|알겠습니다|알겠어요|그렇군요|그러시군요|그렇죠|맞습니다|맞아요|감사합니다|고맙습니다|수고\s*많으셨습니다|수고하셨습니다|고생하셨습니다|협조\s*감사합니다|이상입니다|(?:인터뷰|면담)[을를]?\s*마치겠습니다)[\s.,!~…]*$/;
+
+function isPureAcknowledgement(text: string): boolean {
+  const sentences = stripTimestamps(text)
+    .split(/(?<=[.?!？])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return sentences.length > 0 && sentences.every((s) => ACK_SENTENCE.test(s));
 }
 
 /** Mode A: explicit "Q: / A:" structured files. */
@@ -228,22 +260,142 @@ function extractDialogueQA(file: UploadedInterviewFile, fileIndex: number): RawQ
   if (interviewers.length === 0) return [];
   const interviewerSet = new Set(interviewers);
 
+  // STT speaker labels are unreliable: a turn labeled as the interviewer that
+  // does NOT read as a question and directly follows an interviewee turn is a
+  // mislabeled continuation of that answer (Plaud splits answers mid-sentence).
+  // Fold it into the previous turn, extending the span so the citation covers
+  // it. The reverse direction is never reattributed — interviewee tag
+  // questions ("복합적이네요?") stay inside answers — and pure closings remain
+  // interviewer speech.
+  const recovered: Turn[] = [];
+  for (const turn of turns) {
+    const prev = recovered[recovered.length - 1];
+    if (
+      prev &&
+      !interviewerSet.has(prev.speaker) &&
+      interviewerSet.has(turn.speaker) &&
+      !isQuestionLike(turn.text) &&
+      !isPureAcknowledgement(turn.text)
+    ) {
+      prev.text = `${prev.text} ${turn.text}`.trim();
+      prev.end = turn.end;
+      continue;
+    }
+    recovered.push({ ...turn });
+  }
+
+  // Pairing: consecutive question-like interviewer turns join into ONE
+  // question (the later restatement clarifies; condenseQuestion keeps the last
+  // substantive interrogative), and the answer is ALL consecutive interviewee
+  // turns that follow, cited as a single span.
   const items: RawQA[] = [];
-  for (let t = 0; t < turns.length - 1; t++) {
-    const qTurn = turns[t];
-    const aTurn = turns[t + 1];
-    if (!interviewerSet.has(qTurn.speaker) || interviewerSet.has(aTurn.speaker)) continue;
-    const timestamp = qTurn.text.match(TIMESTAMP)?.[1] ?? aTurn.text.match(TIMESTAMP)?.[1];
-    const question = cleanQuestion(qTurn.text.replace(TIMESTAMP, "").trim());
-    const answer = aTurn.text.replace(TIMESTAMP, "").trim();
+  let t = 0;
+  while (t < recovered.length) {
+    const turn = recovered[t];
+    if (!interviewerSet.has(turn.speaker) || !isQuestionLike(turn.text)) {
+      t++;
+      continue;
+    }
+    const qTurns: Turn[] = [turn];
+    let next = t + 1;
+    while (
+      next < recovered.length &&
+      interviewerSet.has(recovered[next].speaker) &&
+      isQuestionLike(recovered[next].text)
+    ) {
+      qTurns.push(recovered[next]);
+      next++;
+    }
+    const aTurns: Turn[] = [];
+    while (next < recovered.length && !interviewerSet.has(recovered[next].speaker)) {
+      aTurns.push(recovered[next]);
+      next++;
+    }
+    t = next;
+    if (aTurns.length === 0) continue;
+
+    const timestamp =
+      qTurns.map((x) => x.text.match(TIMESTAMP)?.[1]).find(Boolean) ??
+      aTurns.map((x) => x.text.match(TIMESTAMP)?.[1]).find(Boolean);
+    const question = cleanQuestion(stripTimestamps(qTurns.map((x) => x.text).join(" ")));
+    const answer = stripTimestamps(aTurns.map((x) => x.text).join(" "));
     if (!question || !answer) continue;
     items.push({
       question,
       answer,
-      citations: [citationFor(file, aTurn.start, aTurn.end, 0.85)],
+      citations: [
+        citationFor(file, aTurns[0].start, aTurns[aTurns.length - 1].end, 0.85),
+      ],
       timestampLabel: timestamp,
-      sortKey: fileIndex * 100000 + qTurn.lineIdx,
+      sortKey: fileIndex * 100000 + qTurns[0].lineIdx,
     });
+  }
+  return items;
+}
+
+const NUMBERED_LINE = /^\s*\d{1,2}[.)]\s+/;
+/** Trailing "(...)" on a written question: the interviewer's self-reminder. */
+const TRAILING_PARENTHETICAL = /\s*\([^()]*\)\s*$/;
+
+/**
+ * Mode B2: numbered written notes. Handwritten interview notes state each
+ * question on a numbered line ("2. ...하시나요?") with the answer in the
+ * paragraph(s) below it, until the next numbered question line. Numbered lines
+ * that do not read as questions are treated as ordinary content. Trailing
+ * parenthetical reminders stay inside the source (citation offsets are not
+ * adjusted) but are stripped from the displayed question.
+ */
+function extractNumberedNotesQA(file: UploadedInterviewFile, fileIndex: number): RawQA[] {
+  const lines = splitLines(file.contentText);
+
+  const questionRemainder = (line: Line): string | null => {
+    const m = line.text.match(NUMBERED_LINE);
+    if (!m) return null;
+    const remainder = line.text.slice(m[0].length).trim();
+    return isQuestionLike(remainder) ? remainder : null;
+  };
+
+  const items: RawQA[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const remainder = questionRemainder(lines[i]);
+    if (remainder === null) {
+      i++;
+      continue;
+    }
+    const qLineIdx = i;
+    i++;
+    // Collect the answer block: non-empty lines (blank lines between
+    // paragraphs allowed) until the next numbered question line or EOF.
+    let answerStart = -1;
+    let answerEnd = -1;
+    const answerParts: string[] = [];
+    while (i < lines.length && questionRemainder(lines[i]) === null) {
+      const line = lines[i];
+      const trimmed = line.text.trim();
+      if (trimmed.length > 0) {
+        if (answerStart === -1) {
+          answerStart = line.start + (line.text.length - line.text.trimStart().length);
+        }
+        answerEnd = line.end;
+        answerParts.push(trimmed);
+      }
+      i++;
+    }
+    const question = remainder
+      .replace(TRAILING_PARENTHETICAL, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const answer = answerParts.join(" ").trim();
+    if (question && answer && answerStart >= 0) {
+      items.push({
+        question,
+        answer,
+        citations: [citationFor(file, answerStart, answerEnd, 0.75)],
+        sortKey: fileIndex * 100000 + qLineIdx,
+        preferFirstQuestion: true,
+      });
+    }
   }
   return items;
 }
@@ -296,6 +448,11 @@ function extractFromFile(file: UploadedInterviewFile, fileIndex: number): RawQA[
   const dialogue = extractDialogueQA(file, fileIndex);
   if (dialogue.length > 0) return dialogue;
 
+  // Numbered written notes ("2. ...하시나요?") are tried before the generic
+  // bullet/keyed-note fallback.
+  const numbered = extractNumberedNotesQA(file, fileIndex);
+  if (numbered.length > 0) return numbered;
+
   return extractNotesQA(file, fileIndex);
 }
 
@@ -315,8 +472,9 @@ function scoreImportance(
   ctxTokens: string[]
 ): { importance: Importance; reason: string; contextMatched: boolean } {
   // The answer carries the evidence; the interviewer's question often repeats
-  // incident vocabulary, so it is weighted much lower.
-  const answer = qa.answer;
+  // incident vocabulary, so it is weighted much lower. Cross-source merged
+  // items score on BOTH original answers for maximal keyword signal.
+  const answer = qa.scoringAnswer ?? qa.answer;
   const answerLower = answer.toLowerCase();
 
   const highInAnswer = HIGH_KEYWORDS.filter((k) => answer.includes(k));
@@ -403,6 +561,62 @@ function isNotesStub(qa: RawQA): boolean {
   return qa.citations.length > 0 && qa.citations.every((c) => c.confidence <= 0.6);
 }
 
+/** Display preference: a note answer this short is a usable human synthesis. */
+const NOTE_ANSWER_DISPLAY_MAX = 220;
+
+/**
+ * Cross-source synthesis: the same exchange often appears in BOTH a transcript
+ * and the handwritten note for that interview. A notes-only item that covers
+ * the same topic as a transcript item (content-token overlap over the combined
+ * Q+A text) collapses into that item, citing both files with their real
+ * offsets. Manual notes are SUPPLEMENTARY to the transcript: the transcript
+ * question wins when it reads as a question, and the note answer — a
+ * human-written synthesis — wins when it is short enough to display.
+ */
+function mergeAcrossSources(items: RawQA[], files: UploadedInterviewFile[]): RawQA[] {
+  const typeById = new Map(files.map((f) => [f.id, f.sourceType]));
+  const fromNotes = (qa: RawQA) =>
+    qa.citations.length > 0 &&
+    qa.citations.every((c) => typeById.get(c.fileId) === "manual_notes");
+  const combinedText = (qa: RawQA) => `${qa.question} ${qa.scoringAnswer ?? qa.answer}`;
+
+  // Transcript items sort before notes items (see runMockExtraction), so every
+  // candidate is already in `result` when its notes counterpart is visited.
+  const result: RawQA[] = [];
+  for (const item of items) {
+    if (!fromNotes(item)) {
+      result.push(item);
+      continue;
+    }
+    let best: RawQA | null = null;
+    let bestShared = 0;
+    for (const candidate of result) {
+      if (fromNotes(candidate)) continue;
+      const overlap = topicOverlap(combinedText(candidate), combinedText(item));
+      if (overlap.matches && overlap.sharedCount > bestShared) {
+        best = candidate;
+        bestShared = overlap.sharedCount;
+      }
+    }
+    if (!best) {
+      result.push(item);
+      continue;
+    }
+    best.scoringAnswer = `${best.scoringAnswer ?? best.answer} ${item.answer}`;
+    best.citations.push(...item.citations);
+    if (!isQuestionLike(condenseQuestion(best.question))) {
+      best.question = item.question;
+      best.preferFirstQuestion = item.preferFirstQuestion;
+    }
+    // Mode-C stubs are fragments, not syntheses — they only add citations.
+    if (!isNotesStub(item) && condenseAnswer(item.answer).length <= NOTE_ANSWER_DISPLAY_MAX) {
+      best.answer = item.answer;
+    }
+    // timestampLabel stays from the transcript side.
+  }
+  return result;
+}
+
 export function runMockExtraction(args: {
   incident: Incident;
   overviewEntries: OverviewEntry[];
@@ -454,15 +668,19 @@ export function runMockExtraction(args: {
   }
   merged.sort((a, b) => a.sortKey - b.sortKey);
 
+  // Same-topic items split across a transcript and a handwritten note collapse
+  // into one item citing both files.
+  const crossMerged = mergeAcrossSources(merged, ordered);
+
   const ctx = contextTokens(incident, overviewEntries);
 
   // Importance scoring, dedup and filtering above all ran on the FULL text so
   // keyword detection stays intact; only the displayed Q&A is condensed here.
   // Citations keep quoting the original transcript with exact offsets.
-  let qaItems: ExtractedQAItem[] = merged.map((qa) => {
+  let qaItems: ExtractedQAItem[] = crossMerged.map((qa) => {
     const { importance, reason, contextMatched } = scoreImportance(qa, ctx);
     return {
-      question: condenseQuestion(qa.question),
+      question: condenseQuestion(qa.question, { preferFirst: qa.preferFirstQuestion }),
       answer: condenseAnswer(qa.answer),
       importance,
       importanceReason: reason,
@@ -473,6 +691,11 @@ export function runMockExtraction(args: {
       _contextMatched: contextMatched,
     } as ExtractedQAItem & { _contextMatched?: boolean };
   });
+
+  // Coherence guard: anything whose condensed question still does not read as
+  // a question is mis-extracted garbage, dropped BEFORE prefilterCount so it
+  // never inflates the visible "extracted N items" count.
+  qaItems = qaItems.filter((q) => isQuestionLike(q.question));
 
   const prefilterCount = qaItems.length;
 

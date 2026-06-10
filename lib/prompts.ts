@@ -32,6 +32,21 @@ ABSOLUTE RULES:
 TASK:
 Given the incident context, involved locations, overview notes, transcript files, and manual notes, extract interview Q&A pairs.
 
+MULTI-SOURCE SYNTHESIS:
+When the same interview has both transcript file(s) (sourceType "transcript") and manual note file(s) (sourceType "notes"), the transcript is the PRIMARY source and the notes are SUPPLEMENTARY.
+- Read the transcript first, then the notes.
+- When the same question or topic appears in both files, output ONE merged Q&A that synthesizes both sources. Never output the same question twice because it appears in two files.
+- A merged Q&A must carry sourceCitations entries for BOTH files — one citation per file, and each citation's quote must be a verbatim excerpt from its OWN file. Never quote one file under another file's fileId/fileName.
+- Manual notes are usually written more cleanly than spoken transcripts; prefer the clearer wording when composing the merged question and answer, as long as every fact is supported by at least one cited source.
+- STT transcripts misspell names ("최종호"/"최종오", "이행란"/"이행남" may be the SAME person). Treat such spelling variants as the same person — do not let a spelling difference block a merge or create a second person. When the transcript and the manual note spell a name differently, use the manual note's spelling.
+
+SPEAKER ATTRIBUTION (STT transcripts):
+Speaker labels in STT transcripts (e.g. Plaud "Speaker 1" / "Speaker 2") are unreliable: a turn labeled as the interviewer may actually be the INTERVIEWEE continuing their answer, sometimes split mid-sentence across two turns.
+- Do not trust speaker labels blindly. Infer the actual speaker from content and context: interrogative vs declarative phrasing, topical continuity with the surrounding turns, and mid-sentence continuation (a turn that picks up exactly where the previous one broke off).
+- Text that reads as a declarative continuation of the ongoing answer belongs to that answer, even when its label says interviewer. Reattach mid-sentence splits before extracting.
+- Example: a "Speaker 1" turn ending "...다이렉트로 얘기하실." followed by a "Speaker 2" turn starting "수도 있고 네..." is ONE continuing interviewee answer split mid-sentence — not a new question and answer.
+- Never emit a Q&A whose "question" is actually interviewee speech. If a candidate question does not actually ask anything, treat it as part of the surrounding answer (or drop it), and pair the answer with the most recent REAL interviewer question instead.
+
 QUESTION NORMALIZATION:
 - Rewrite each interviewer prompt as ONE concise, formal Korean sentence in 합쇼체 ("~습니까?", "~에 대해 설명 부탁드립니다").
 - Drop greetings, fillers, repetition, and meta-talk; keep only the core question.
@@ -51,6 +66,11 @@ ANSWER EXTRACTION:
 - If the answer is unclear, write "모름" or exclude it.
 - If transcript and notes conflict, mention the conflict and cite both.
 - If the source shows an interview timestamp such as (10:05) next to an exchange, copy it verbatim into timestampLabel; otherwise use null.
+
+COHERENCE:
+- Every Q and every A must read as natural, self-contained, comprehensible Korean on its own — understandable without seeing the source file.
+- A question must always be an actual question. If, after normalization, an item's "question" still does not read as a question (it asserts instead of asks), do not emit that item as-is: fold its text into the relevant answer per SPEAKER ATTRIBUTION, or exclude it.
+- If the source text is garbled, cut mid-sentence, or split across turns, rephrase minimally so it makes sense — without adding any fact not in the source.
 
 STYLE EXAMPLES (style references only — they define TONE and LENGTH, not content; never copy their facts into output):
 

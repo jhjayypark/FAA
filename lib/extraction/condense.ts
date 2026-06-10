@@ -32,14 +32,20 @@ const TAG_QUESTION =
 
 /**
  * Keep only the clearest formulation of a multi-part question. Interviewers
- * nearly always restate the question most clearly LAST, so when several
- * interrogative sentences were joined by cleanQuestion, the last SUBSTANTIVE
- * one wins — trailing tag questions ("그렇죠?") and too-short fragments are
- * skipped, and if nothing substantive remains the input is left alone.
+ * SPEAKING nearly always restate the question most clearly LAST, so when
+ * several interrogative sentences were joined by cleanQuestion, the last
+ * SUBSTANTIVE one wins — trailing tag questions ("그렇죠?") and too-short
+ * fragments are skipped, and if nothing substantive remains the input is left
+ * alone. WRITTEN notes are the opposite: the main question is stated first and
+ * later sentences are follow-ups, so notes-derived questions pass
+ * `preferFirst` to select the first substantive interrogative instead.
  * Selection + filler stripping only — no 해요체→합쇼체 conversion, which is
  * too risky to do morphologically.
  */
-export function condenseQuestion(question: string): string {
+export function condenseQuestion(
+  question: string,
+  options?: { preferFirst?: boolean }
+): string {
   let q = question.replace(/\s+/g, " ").trim();
 
   const sentences = q.split(/(?<=[.?!？])\s+/).filter(Boolean);
@@ -51,7 +57,9 @@ export function condenseQuestion(question: string): string {
         s.replace(/[\s?？.!,…~]/g, "").length >= MIN_QUESTION_REMAINDER
     );
     if (substantive.length > 0) {
-      q = substantive[substantive.length - 1];
+      q = options?.preferFirst
+        ? substantive[0]
+        : substantive[substantive.length - 1];
     }
   }
 
