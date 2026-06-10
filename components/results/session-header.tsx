@@ -4,11 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowLeft01Icon,
+  Calendar03Icon,
+  PencilEdit02Icon,
+} from "@hugeicons/core-free-icons";
 import type { InterviewSession } from "@/lib/types";
 import { UNKNOWN_INTERVIEWEE } from "@/lib/types";
 import { useFAAStore } from "@/lib/store";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -26,6 +30,8 @@ export function SessionHeader({
   const updateInterviewSession = useFAAStore((s) => s.updateInterviewSession);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const [editingDate, setEditingDate] = useState(false);
+  const [dateDraft, setDateDraft] = useState("");
 
   const displayName = session.intervieweeName?.trim()
     ? session.intervieweeName.trim()
@@ -45,6 +51,19 @@ export function SessionHeader({
     });
     setEditing(false);
     toast.success("Interviewee name updated.");
+  }
+
+  function startEditingDate() {
+    setDateDraft(session.interviewDate ? session.interviewDate.slice(0, 10) : "");
+    setEditingDate(true);
+  }
+
+  function saveDate() {
+    updateInterviewSession(incidentId, session.id, {
+      interviewDate: dateDraft ? dateDraft : undefined,
+    });
+    setEditingDate(false);
+    toast.success("Session updated.");
   }
 
   return (
@@ -95,11 +114,61 @@ export function SessionHeader({
         </div>
       )}
 
-      <p className="mt-1.5 font-mono text-xs text-muted-foreground">
-        Extracted {formatDateTime(session.createdAt)} &middot; {fileCount}{" "}
-        {fileCount === 1 ? "source file" : "source files"} &middot; {findingCount}{" "}
-        {findingCount === 1 ? "finding" : "findings"}
-      </p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-xs text-muted-foreground">
+        <span>
+          Extracted {formatDateTime(session.createdAt)} &middot; {fileCount}{" "}
+          {fileCount === 1 ? "source file" : "source files"} &middot;{" "}
+          {findingCount} {findingCount === 1 ? "finding" : "findings"}
+        </span>
+        <span aria-hidden="true">&middot;</span>
+        {editingDate ? (
+          <span className="inline-flex items-center gap-1.5">
+            <Input
+              autoFocus
+              type="date"
+              value={dateDraft}
+              onChange={(e) => setDateDraft(e.target.value)}
+              aria-label="Interview date"
+              className="h-7 w-36 font-mono text-xs"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveDate();
+                if (e.key === "Escape") setEditingDate(false);
+              }}
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={saveDate}
+            >
+              Save
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={() => setEditingDate(false)}
+            >
+              Cancel
+            </Button>
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1">
+            {session.interviewDate
+              ? `Interview ${formatDate(session.interviewDate)}`
+              : "No interview date"}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Edit interview date"
+              className="size-6 text-muted-foreground"
+              onClick={startEditingDate}
+            >
+              <HugeiconsIcon icon={Calendar03Icon} size={12} strokeWidth={1.8} />
+            </Button>
+          </span>
+        )}
+      </div>
     </header>
   );
 }

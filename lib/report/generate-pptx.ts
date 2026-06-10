@@ -316,6 +316,7 @@ function renderSlide(
         color: TEXT_DARK,
         fontFace: KOREAN_FONT,
         valign: "top",
+        fit: "shrink",
       });
       if (options.includeImportanceBadges) {
         addChip(slide, item.importance, PAGE_W - MARGIN_X - 0.95, y0);
@@ -329,9 +330,10 @@ function renderSlide(
         color: TEXT_DARK,
         fontFace: KOREAN_FONT,
         valign: "top",
+        fit: "shrink",
       });
       if (item.citation) {
-        slide.addText(`출처: ${item.citation.fileName}, "${item.citation.quote}"`, {
+        slide.addText(`Source: ${item.citation.fileName}, "${item.citation.quote}"`, {
           x: MARGIN_X,
           y: y0 + 2.32,
           w: CONTENT_W,

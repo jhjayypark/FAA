@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { BubbleChatIcon, Delete02Icon } from "@hugeicons/core-free-icons";
-import { useFAAStore, useHydrated } from "@/lib/store";
+import { useAllLocations, useFAAStore, useHydrated } from "@/lib/store";
 import { answerQuestion } from "@/lib/assistant/answer";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +41,7 @@ export function AssistantView() {
   const searchParams = useSearchParams();
   const incidents = useFAAStore((s) => s.incidents);
   const threads = useFAAStore((s) => s.assistantThreads);
+  const locations = useAllLocations();
   const addAssistantMessage = useFAAStore((s) => s.addAssistantMessage);
   const clearAssistantThread = useFAAStore((s) => s.clearAssistantThread);
 
@@ -72,10 +73,21 @@ export function AssistantView() {
     const incident = useFAAStore.getState().incidents.find((inc) => inc.id === id);
     if (!incident || thinking) return;
     addAssistantMessage(id, { role: "user", content });
+    // Capture the id of the user message just appended so the reply can be
+    // dropped if the thread is cleared (or the incident deleted) meanwhile.
+    const thread = useFAAStore.getState().assistantThreads[id] ?? [];
+    const userMessageId = thread[thread.length - 1]?.id;
     setPendingId(id);
     try {
-      const reply = await answerQuestion({ incident, question: content });
-      addAssistantMessage(id, { role: "assistant", content: reply });
+      const reply = await answerQuestion({ incident, question: content, locations });
+      const state = useFAAStore.getState();
+      const incidentExists = state.incidents.some((inc) => inc.id === id);
+      const messageStillInThread = (state.assistantThreads[id] ?? []).some(
+        (m) => m.id === userMessageId
+      );
+      if (incidentExists && messageStillInThread) {
+        addAssistantMessage(id, { role: "assistant", content: reply });
+      }
     } catch {
       toast.error("Could not generate a reply. Please try again.");
     } finally {
@@ -86,7 +98,7 @@ export function AssistantView() {
   function handleClear() {
     if (!selectedIncident) return;
     clearAssistantThread(selectedIncident.id);
-    toast.success("Conversation cleared");
+    toast.success("Conversation cleared.");
   }
 
   if (!hydrated) return <AssistantSkeleton />;

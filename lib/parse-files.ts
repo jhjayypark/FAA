@@ -35,8 +35,10 @@ async function parsePdf(file: File): Promise<string> {
     const page = await doc.getPage(p);
     const content = await page.getTextContent();
     const text = content.items
-      .map((item) => ("str" in item ? item.str : ""))
-      .join(" ");
+      .map((item) =>
+        "str" in item ? item.str + (item.hasEOL ? "\n" : " ") : ""
+      )
+      .join("");
     pages.push(text);
   }
   return pages.join("\n\n");
@@ -56,14 +58,26 @@ export async function parseUploadedFile(file: File): Promise<string> {
   }
 
   try {
+    let result: string | null = null;
     if (SUPPORTED_TEXT_EXTENSIONS.includes(ext)) {
-      return await file.text();
+      result = await file.text();
+    } else if (ext === "docx") {
+      result = await parseDocx(file);
+    } else if (ext === "pdf") {
+      result = await parsePdf(file);
     }
-    if (ext === "docx") {
-      return await parseDocx(file);
-    }
-    if (ext === "pdf") {
-      return await parsePdf(file);
+    if (result !== null) {
+      if (result.trim().length === 0) {
+        if (ext === "pdf") {
+          throw new FileParseError(
+            `No text could be extracted from ${file.name}. It may be a scanned document that needs OCR or a typed transcription.`
+          );
+        }
+        throw new FileParseError(
+          `No text could be extracted from ${file.name}. The file appears to be empty.`
+        );
+      }
+      return result;
     }
   } catch (err) {
     if (err instanceof FileParseError) throw err;

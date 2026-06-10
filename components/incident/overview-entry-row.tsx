@@ -61,31 +61,47 @@ export function OverviewEntryRow({
     if (!draft.title.trim()) return;
     updateOverviewEntry(incidentId, entry.id, draftToEntryFields(draft));
     setEditing(false);
-    toast.success("Entry updated");
+    toast.success("Entry updated.");
   };
 
   const handleDelete = () => {
     deleteOverviewEntry(incidentId, entry.id);
-    toast.success("Entry deleted");
+    toast.success("Entry deleted.");
   };
 
   if (editing) {
     return (
-      <div className="flex flex-col gap-3 p-4">
+      <form
+        className="flex flex-col gap-3 p-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            e.stopPropagation();
+            setEditing(false);
+          }
+          if (e.key === "Enter" && e.nativeEvent.isComposing) {
+            e.preventDefault();
+          }
+        }}
+      >
         <EntryFields
           draft={draft}
           onChange={(patch) => setDraft((d) => ({ ...d, ...patch }))}
           idPrefix={`edit-${entry.id}`}
+          autoFocusTitle
         />
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setEditing(false)}>
+          <Button type="button" variant="outline" onClick={() => setEditing(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!draft.title.trim()}>
+          <Button type="submit" disabled={!draft.title.trim()}>
             Save
           </Button>
         </div>
-      </div>
+      </form>
     );
   }
 

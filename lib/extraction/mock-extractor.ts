@@ -19,7 +19,11 @@ import type {
   SourceCitation,
   UploadedInterviewFile,
 } from "@/lib/types";
-import { detectIntervieweeName, INTERVIEWER_LABELS } from "@/lib/extraction/detect-interviewee";
+import {
+  detectInterviewDate,
+  detectIntervieweeName,
+  INTERVIEWER_LABELS,
+} from "@/lib/extraction/detect-interviewee";
 
 type Line = { text: string; start: number; end: number };
 
@@ -97,9 +101,26 @@ function citationFor(
   };
 }
 
+const GREETING_SENTENCE =
+  /^(안녕하세요|안녕하십니까|반갑습니다|수고\s*많으|바쁘신데|시간\s*내\s*주셔서|감사합니다|오늘\s*(인터뷰|면담)[은는]?|알겠습니다)/;
+
 function cleanQuestion(text: string): string {
   let q = text.replace(Q_MARKER, "").replace(SPEAKER_LINE, "").trim();
   q = q.replace(/\s+/g, " ");
+
+  // Drop greeting/preamble sentences so the actual question leads the card.
+  // Only sentences present in the source are kept; nothing is rewritten.
+  const sentences = q.split(/(?<=[.?!？])\s+/).filter(Boolean);
+  if (sentences.length > 1) {
+    const interrogatives = sentences.filter((s) => /[?？]$/.test(s));
+    if (interrogatives.length > 0) {
+      q = interrogatives.join(" ");
+    } else {
+      const kept = sentences.filter((s) => !GREETING_SENTENCE.test(s));
+      if (kept.length > 0) q = kept.join(" ");
+    }
+  }
+
   // Normalize to an interrogative form without inventing meaning:
   // only append "?" when the line clearly reads as a prompt but lacks one.
   if (q && !/[?？]$/.test(q) && /(나요|습니까|입니까|는지|었는지|있는지|해주세요|말씀|설명|알려)/.test(q)) {
@@ -246,7 +267,7 @@ function extractNotesQA(file: UploadedInterviewFile, fileIndex: number): RawQA[]
     let question: string;
     let answer: string;
     if (keyed) {
-      question = `${keyed[1].trim()} 관련 기록 내용은?`;
+      question = `"${keyed[1].trim()}" 항목에 기록된 내용은?`;
       answer = keyed[2].trim();
     } else {
       question = "수기 노트에 기록된 사항은?";
@@ -309,12 +330,15 @@ function scoreImportance(
     highInQuestion.length * 0.75 +
     mediumInAnswer.length * 1 +
     Math.min(ctxHits.length, 3) * 0.75;
-  if (MONEY.test(answer)) score += 3.5;
+  const hasMoney = MONEY.test(answer);
+  if (hasMoney) score += 3.5;
   else if (QUANTITY.test(answer)) score += 1.5;
 
   const contextMatched = ctxHits.length > 0;
 
-  if (score >= 5) {
+  // High requires a red-flag keyword or a money figure in the answer itself;
+  // medium keywords plus context overlap alone cap at Medium.
+  if (score >= 5 && (highInAnswer.length > 0 || hasMoney)) {
     const basis = [...new Set([...highInAnswer, ...mediumInAnswer, ...ctxHits])].slice(0, 3).join(", ");
     return {
       importance: "High",
@@ -357,6 +381,27 @@ function isDuplicate(a: RawQA, b: RawQA): boolean {
   );
 }
 
+/** Containment: how much of the smaller text's bigrams appear in the larger. */
+function bigramContainment(a: string, b: string): number {
+  const bigrams = (s: string) => {
+    const norm = s.replace(/[^가-힣A-Za-z0-9]/g, "");
+    const set = new Set<string>();
+    for (let i = 0; i < norm.length - 1; i++) set.add(norm.slice(i, i + 2));
+    return set;
+  };
+  const A = bigrams(a);
+  const B = bigrams(b);
+  if (A.size === 0 || B.size === 0) return 0;
+  let inter = 0;
+  for (const g of A) if (B.has(g)) inter++;
+  return inter / Math.min(A.size, B.size);
+}
+
+/** Notes stubs carry only low-confidence citations (see extractNotesQA). */
+function isNotesStub(qa: RawQA): boolean {
+  return qa.citations.length > 0 && qa.citations.every((c) => c.confidence <= 0.6);
+}
+
 export function runMockExtraction(args: {
   incident: Incident;
   overviewEntries: OverviewEntry[];
@@ -389,9 +434,17 @@ export function runMockExtraction(args: {
   });
 
   // Merge near-duplicate items across files (e.g. transcript + shorthand notes).
+  // Shorthand note stubs carry generated questions, so a transcript/notes pair
+  // is matched on answer containment instead of question similarity; the
+  // transcript item wins and the note becomes an extra citation.
   const merged: RawQA[] = [];
   for (const item of raw) {
-    const dup = merged.find((m) => isDuplicate(m, item));
+    const dup = merged.find(
+      (m) =>
+        isDuplicate(m, item) ||
+        (isNotesStub(item) !== isNotesStub(m) &&
+          bigramContainment(m.answer, item.answer) > 0.45)
+    );
     if (dup) {
       dup.citations.push(...item.citations);
     } else {
@@ -417,6 +470,8 @@ export function runMockExtraction(args: {
     } as ExtractedQAItem & { _contextMatched?: boolean };
   });
 
+  const prefilterCount = qaItems.length;
+
   if (settings.importantOnly) {
     qaItems = qaItems.filter((q) => {
       const matched = (q as ExtractedQAItem & { _contextMatched?: boolean })._contextMatched;
@@ -433,6 +488,8 @@ export function runMockExtraction(args: {
 
   return {
     intervieweeName: detectIntervieweeName(uploadedFiles),
+    interviewDate: detectInterviewDate(uploadedFiles),
     qaItems,
+    prefilterCount,
   };
 }

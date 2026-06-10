@@ -2,7 +2,12 @@
 
 export function formatDate(iso?: string): string {
   if (!iso) return "";
-  const d = new Date(iso);
+  // Date-only strings must be parsed as local dates; new Date("yyyy-mm-dd")
+  // would treat them as UTC midnight and shift a day in western timezones.
+  const dateOnly = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const d = dateOnly
+    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+    : new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString("en-US", {
     year: "numeric",

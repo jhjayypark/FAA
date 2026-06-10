@@ -198,7 +198,7 @@ export function buildSlideModels({
       items: page.map((q) => {
         const citation = options.includeCitations ? q.sourceCitations[0] : undefined;
         return {
-          question: truncate(oneLine(q.question), 200),
+          question: truncate(oneLine(q.question), 110),
           answer: truncate(q.answer.trim(), 420),
           importance: q.importance,
           citation: citation

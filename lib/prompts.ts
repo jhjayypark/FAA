@@ -1,5 +1,6 @@
 import type {
   ExtractionSettings,
+  FNSLocation,
   Incident,
   OverviewEntry,
   UploadedInterviewFile,
@@ -42,6 +43,7 @@ ANSWER EXTRACTION:
 - Do not summarize beyond what the interviewee actually said.
 - If the answer is unclear, write "모름" or exclude it.
 - If transcript and notes conflict, mention the conflict and cite both.
+- If the source shows an interview timestamp such as (10:05) next to an exchange, copy it verbatim into timestampLabel; otherwise use null.
 
 IMPORTANCE:
 Assign importance:
@@ -63,6 +65,7 @@ Return only valid JSON with:
       "importance": "High" | "Medium" | "Low",
       "importanceReason": string,
       "includedInReport": boolean,
+      "timestampLabel": string | null,
       "sourceCitations": [
         {
           "fileId": string,
@@ -70,6 +73,7 @@ Return only valid JSON with:
           "quote": string,
           "startChar": number | null,
           "endChar": number | null,
+          "pageNumber": number | null,
           "confidence": number
         }
       ]
@@ -95,10 +99,14 @@ Be concise, factual, and audit-oriented.`;
 /** Standard reply when the incident materials cannot verify an answer. */
 export const ASSISTANT_CANNOT_VERIFY = "현재 업로드된 자료만으로는 확인할 수 없습니다.";
 
-function locationNames(incident: Incident, customNames: Record<string, string> = {}): string[] {
+function locationNames(
+  incident: Incident,
+  locations: FNSLocation[] = FNS_LOCATIONS
+): string[] {
   return incident.involvedLocationIds.map((id) => {
-    const seed = FNS_LOCATIONS.find((l) => l.id === id);
-    return seed?.name ?? customNames[id] ?? id;
+    const loc =
+      locations.find((l) => l.id === id) ?? FNS_LOCATIONS.find((l) => l.id === id);
+    return loc?.name ?? id;
   });
 }
 
@@ -147,8 +155,15 @@ SOURCE MATERIALS:
 ${files}`;
 }
 
-/** Serializes the full incident workspace into a context block for the assistant. */
-export function buildAssistantContext(incident: Incident): string {
+/**
+ * Serializes the full incident workspace into a context block for the assistant.
+ * Pass the merged seed + custom location list (e.g. from useAllLocations()) so
+ * custom location ids resolve to names; defaults to the seed list otherwise.
+ */
+export function buildAssistantContext(
+  incident: Incident,
+  locations?: FNSLocation[]
+): string {
   const sessions = incident.interviewSessions
     .map((s) => {
       const qa = s.qaItems
@@ -163,7 +178,7 @@ export function buildAssistantContext(incident: Incident): string {
 
   return `INCIDENT: ${incident.name}
 CONTEXT: ${incident.context || "(none)"}
-INVOLVED LOCATIONS: ${locationNames(incident).join("; ") || "(none)"}
+INVOLVED LOCATIONS: ${locationNames(incident, locations).join("; ") || "(none)"}
 OVERVIEW NOTES:
 ${serializeOverview(incident.overviewEntries)}
 

@@ -99,7 +99,14 @@ export type ExtractedQAItem = Omit<QAItem, "id" | "orderIndex" | "isManuallyEdit
 
 export type ExtractionResult = {
   intervieweeName: string | null;
+  /** Interview date (ISO yyyy-mm-dd) detected from file headers, when present. */
+  interviewDate: string | null;
   qaItems: ExtractedQAItem[];
+  /**
+   * Item count before the importantOnly filter was applied. Lets the UI
+   * distinguish "nothing extracted" from "everything filtered out".
+   */
+  prefilterCount: number;
 };
 
 export type ReportOptions = {

@@ -60,7 +60,7 @@ function SessionRow({
 
   const handleDelete = () => {
     deleteInterviewSession(incidentId, session.id);
-    toast.success("Interview session deleted");
+    toast.success("Interview session deleted.");
   };
 
   return (

@@ -159,7 +159,7 @@ function SlideBody({ slide, options }: { slide: ReportSlide; options: ReportOpti
               </p>
               {item.citation && (
                 <p className="mt-auto truncate pt-0.5 text-[8px] text-muted-foreground sm:pt-1 sm:text-[10px]">
-                  {`출처: ${item.citation.fileName}, "${item.citation.quote}"`}
+                  {`Source: ${item.citation.fileName}, "${item.citation.quote}"`}
                 </p>
               )}
             </div>

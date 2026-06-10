@@ -153,7 +153,9 @@ export function ReportDialog({
       <DialogContent
         className={cn(
           "flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0",
-          view === "options" ? "sm:max-w-3xl" : "sm:max-w-5xl"
+          view === "options"
+            ? "sm:max-w-[min(48rem,calc(100%-2rem))]"
+            : "sm:max-w-[min(64rem,calc(100%-2rem))]"
         )}
       >
         {view === "options" ? (

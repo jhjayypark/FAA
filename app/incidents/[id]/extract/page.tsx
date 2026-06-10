@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -104,6 +104,16 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
   const [stage, setStage] = useState<ExtractionStage>(PIPELINE_STAGES[0]);
   const [percent, setPercent] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [filteredOutCount, setFilteredOutCount] = useState(0);
+
+  const alive = useRef(true);
+  const inFlight = useRef(false);
+  useEffect(
+    () => () => {
+      alive.current = false;
+    },
+    []
+  );
 
   function handleAddFiles(selected: File[]) {
     selected.forEach((file) => {
@@ -147,6 +157,8 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
 
   async function startExtraction() {
     if (!incident) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     const settings: ExtractionSettings = {
       stylePreset: "strict_factual",
       importantOnly,
@@ -156,6 +168,7 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
     setStage(PIPELINE_STAGES[0]);
     setPercent(0);
     setErrorMessage(null);
+    setFilteredOutCount(0);
     try {
       const result = await extractInterviewInsights({
         incident,
@@ -163,17 +176,20 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
         uploadedFiles: files,
         settings,
         onProgress: (s, p) => {
+          if (!alive.current) return;
           setStage(s);
           setPercent(p);
         },
       });
+      if (!alive.current) return;
       if (result.qaItems.length === 0) {
+        setFilteredOutCount(result.prefilterCount);
         setStep("empty");
         return;
       }
       const session = addInterviewSession(incident.id, {
         intervieweeName: result.intervieweeName ?? undefined,
-        interviewDate: undefined,
+        interviewDate: result.interviewDate ?? undefined,
         uploadedFiles: files,
         extractionSettings: settings,
         qaItems: result.qaItems.map((q, i) => ({
@@ -186,10 +202,13 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
       toast.success("Extraction complete.");
       router.replace(`/incidents/${id}/sessions/${session.id}`);
     } catch (err) {
+      if (!alive.current) return;
       setErrorMessage(
         err instanceof Error ? err.message : "An unexpected error occurred."
       );
       setStep("error");
+    } finally {
+      inFlight.current = false;
     }
   }
 
@@ -257,8 +276,10 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
             stage={stage}
             percent={percent}
             errorMessage={errorMessage}
+            filteredOutCount={filteredOutCount}
             onRetry={startExtraction}
             onBackToFiles={() => setStep("upload")}
+            onBackToRules={() => setStep("rules")}
           />
         )}
       </div>

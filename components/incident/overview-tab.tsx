@@ -35,7 +35,7 @@ export function OverviewTab({ incident }: { incident: Incident }) {
     if (!draft.title.trim()) return;
     addOverviewEntry(incident.id, draftToEntryFields(draft));
     setDraft(emptyDraft(draft.type));
-    toast.success("Entry added");
+    toast.success("Entry added.");
   };
 
   return (
@@ -45,7 +45,15 @@ export function OverviewTab({ incident }: { incident: Incident }) {
           <CardTitle>New Entry</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAdd} className="flex flex-col gap-3">
+          <form
+            onSubmit={handleAdd}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.nativeEvent.isComposing) {
+                e.preventDefault();
+              }
+            }}
+            className="flex flex-col gap-3"
+          >
             <EntryFields
               draft={draft}
               onChange={(patch) => setDraft((d) => ({ ...d, ...patch }))}

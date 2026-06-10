@@ -53,6 +53,29 @@ function isGenericLabel(label: string): boolean {
   return GENERIC_INTERVIEWEE_LABELS.has(l) || DOC_WORDS.has(l);
 }
 
+const HEADER_DATE_PATTERN =
+  /(?:일시|날짜|면담일|인터뷰\s*일자?|면담\s*일자?|date)\s*[::]?\s*(\d{4})[-./년\s]+(\d{1,2})[-./월\s]+(\d{1,2})/i;
+
+/**
+ * Detects the interview date (ISO yyyy-mm-dd) from heading lines such as
+ * "일시: 2026-06-13 10:00". Returns null when no header date is found.
+ */
+export function detectInterviewDate(files: UploadedInterviewFile[]): string | null {
+  for (const f of files) {
+    const head = f.contentText.split(/\r?\n/, 15);
+    for (const line of head) {
+      const m = line.match(HEADER_DATE_PATTERN);
+      if (!m) continue;
+      const [, y, mo, d] = m;
+      const month = Number(mo);
+      const day = Number(d);
+      if (month < 1 || month > 12 || day < 1 || day > 31) continue;
+      return `${y}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+  }
+  return null;
+}
+
 /**
  * Attempts to detect the interviewee's name from file names, transcript headings,
  * and speaker labels. Returns null when uncertain; the UI then shows

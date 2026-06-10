@@ -16,6 +16,7 @@
  */
 
 import type {
+  FNSLocation,
   Importance,
   Incident,
   OverviewEntry,
@@ -33,7 +34,7 @@ import { truncate } from "@/lib/format";
 /**
  * Returns true once a real LLM provider is wired up.
  * TODO: Replace mock assistant with real LLM provider call using
- * ASSISTANT_SYSTEM_PROMPT + buildAssistantContext(incident).
+ * ASSISTANT_SYSTEM_PROMPT + buildAssistantContext(incident, locations).
  */
 function llmConfigured(): boolean {
   return false;
@@ -42,24 +43,27 @@ function llmConfigured(): boolean {
 export async function answerQuestion({
   incident,
   question,
+  locations = FNS_LOCATIONS,
 }: {
   incident: Incident;
   question: string;
+  /** Merged seed + custom location list (e.g. from useAllLocations()). */
+  locations?: FNSLocation[];
 }): Promise<string> {
   // Simulated analysis latency; mirrors a real provider round trip.
   await delay(700 + Math.floor(Math.random() * 500));
 
   if (llmConfigured()) {
     // TODO: Replace mock assistant with real LLM provider call using
-    // ASSISTANT_SYSTEM_PROMPT + buildAssistantContext(incident).
+    // ASSISTANT_SYSTEM_PROMPT + buildAssistantContext(incident, locations).
     const systemPrompt = ASSISTANT_SYSTEM_PROMPT;
-    const context = buildAssistantContext(incident);
+    const context = buildAssistantContext(incident, locations);
     throw new Error(
       `LLM provider not configured (prepared ${systemPrompt.length + context.length} prompt chars).`
     );
   }
 
-  return mockAnswer(incident, question.trim());
+  return mockAnswer(incident, question.trim(), locations);
 }
 
 // ---------------------------------------------------------------------------
@@ -94,7 +98,11 @@ const ENTRY_TYPE_KO: Record<OverviewEntryType, string> = {
 const NEGATION = /없|아니|않|모름|불가/;
 const UNCERTAIN = /모름|기억나|확인 필요|애매/;
 
-function mockAnswer(incident: Incident, question: string): string {
+function mockAnswer(
+  incident: Incident,
+  question: string,
+  locations: FNSLocation[]
+): string {
   const intent = detectIntent(question);
   const refs = collectQA(incident);
   const hasMaterial =
@@ -102,7 +110,7 @@ function mockAnswer(incident: Incident, question: string): string {
 
   // Involved locations live on the incident record itself, so the location
   // intent stays answerable even before any interview or overview material.
-  if (intent === "location") return answerLocations(incident);
+  if (intent === "location") return answerLocations(incident, locations);
 
   // No sessions and no overview data at all: nothing can be verified.
   if (!hasMaterial) return ASSISTANT_CANNOT_VERIFY;
@@ -230,13 +238,15 @@ function answerReport(refs: QARef[]): string {
 
 // --- Intent: follow-up questions ---------------------------------------------
 
+/** Generic note-stub questions carry no topic of their own. */
+const GENERIC_STUB_QUESTION = /^수기 노트에 기록된 사항은\?$/;
+
 /**
  * Follow-ups are derived ONLY from existing material: uncertain answers,
  * low-confidence citations, and already scheduled future interviews.
  * No new topics are invented.
  */
 function answerFollowUp(refs: QARef[], incident: Incident): string {
-  const lines: string[] = [];
   const uncertain = refs
     .filter(
       (r) =>
@@ -244,14 +254,24 @@ function answerFollowUp(refs: QARef[], incident: Incident): string {
         r.qa.sourceCitations.some((c) => c.confidence < 0.7)
     )
     .slice(0, 4);
-  uncertain.forEach((r, i) => {
+  const seen = new Set<string>();
+  const items: string[] = [];
+  for (const r of uncertain) {
+    // Generic note stubs ("수기 노트에 기록된 사항은?") say nothing about the
+    // topic, so surface the answer excerpt instead of the question.
+    const stub = GENERIC_STUB_QUESTION.test(r.qa.question.trim());
+    const topic = stub ? truncate(r.qa.answer, 60) : truncate(r.qa.question, 70);
     const reason = UNCERTAIN.test(r.qa.answer)
-      ? `답변이 "${truncate(r.qa.answer, 50)}"로 기록되어 있어 재확인이 필요합니다`
+      ? stub
+        ? "답변이 불확실하게 기록되어 있어 재확인이 필요합니다"
+        : `답변이 다음과 같이 기록되어 있어 재확인이 필요합니다: "${truncate(r.qa.answer, 50)}"`
       : "출처 인용의 신뢰도가 낮아 재확인이 필요합니다";
-    lines.push(
-      `${i + 1}. "${truncate(r.qa.question, 70)}" : ${reason}. (면담: ${r.interviewee})`
-    );
-  });
+    const line = `"${topic}" : ${reason}. (면담: ${r.interviewee})`;
+    if (seen.has(line)) continue;
+    seen.add(line);
+    items.push(line);
+  }
+  const lines = items.map((line, i) => `${i + 1}. ${line}`);
   const now = Date.now();
   const upcoming = incident.overviewEntries
     .filter(
@@ -271,20 +291,20 @@ function answerFollowUp(refs: QARef[], incident: Incident): string {
 // --- Intent: locations --------------------------------------------------------
 
 /**
- * LIMITATION: user-created custom locations live in the client store
- * (customLocations) and are not importable here without coupling this module
- * to the store. Seed locations resolve via FNS_LOCATIONS; unresolved ids are
- * reported by raw id and labeled as custom locations.
+ * Resolves ids against the caller-provided merged list (seed + custom
+ * locations from the store), so custom locations print as name + address
+ * instead of raw ids. Ids missing from the list fall back to a labeled id.
  */
-function answerLocations(incident: Incident): string {
+function answerLocations(incident: Incident, locations: FNSLocation[]): string {
   if (incident.involvedLocationIds.length === 0) {
     return "이 사건에 등록된 관련 장소가 없습니다.";
   }
   const lines = incident.involvedLocationIds.slice(0, 8).map((id, i) => {
-    const loc = FNS_LOCATIONS.find((l) => l.id === id);
+    const loc =
+      locations.find((l) => l.id === id) ?? FNS_LOCATIONS.find((l) => l.id === id);
     return loc
       ? `${i + 1}. ${loc.name} (${loc.address})`
-      : `${i + 1}. ${id} (사용자 지정 장소)`;
+      : `${i + 1}. 미확인 장소 (id: ${id})`;
   });
   return ["이 사건에 등록된 관련 장소는 다음과 같습니다.", ...lines].join("\n");
 }
@@ -324,12 +344,14 @@ function answerKeywordSearch(refs: QARef[], question: string): string {
     ({ r }, i) =>
       `${i + 1}. Q: ${truncate(r.qa.question, 60)} / A: ${truncate(r.qa.answer, 100)} (출처: ${fileLabel(r)}, 면담: ${r.interviewee})`
   );
-  // If part of the question is not covered by any material (e.g. asking about
-  // salary when only logistics records exist), say so before quoting what IS
-  // related, so a partial match never reads as a direct answer.
+  // If a substantial part of the question (half or more of its content
+  // tokens) is not covered by any material (e.g. asking about salary when
+  // only logistics records exist), say so before quoting what IS related, so
+  // a partial match never reads as a direct answer. A small uncovered
+  // remainder is treated as phrasing noise, not a missing topic.
   const allText = refs.map((r) => `${r.qa.question} ${r.qa.answer}`).join(" ").toLowerCase();
   const uncovered = tokens.filter((t) => !allText.includes(t));
-  if (uncovered.length > 0) {
+  if (uncovered.length / tokens.length > 0.5) {
     return [
       ASSISTANT_CANNOT_VERIFY,
       "다만 질문과 관련된 인터뷰 내용은 다음과 같습니다.",
@@ -377,6 +399,23 @@ const QUESTION_STOPWORDS = new Set([
   "대한",
   "서로",
   "가장",
+  // Abstract qualifiers that describe the question, not its topic.
+  "상태",
+  "상황",
+  "문제",
+  "결과",
+  "경우",
+  // Colloquial question endings; never content tokens.
+  "어땠어",
+  "어땠나요",
+  "어때",
+  "됐어",
+  "였어",
+  "뭐였어",
+  "누구야",
+  "어디야",
+  "얼마야",
+  "왜",
   "the",
   "and",
   "about",

@@ -27,8 +27,11 @@ type ExtractionProgressProps = {
   stage: ExtractionStage;
   percent: number;
   errorMessage: string | null;
+  /** Q&A pairs extracted before the importance filter removed them all. */
+  filteredOutCount: number;
   onRetry: () => void;
   onBackToFiles: () => void;
+  onBackToRules: () => void;
 };
 
 export function ExtractionProgress({
@@ -36,10 +39,42 @@ export function ExtractionProgress({
   stage,
   percent,
   errorMessage,
+  filteredOutCount,
   onRetry,
   onBackToFiles,
+  onBackToRules,
 }: ExtractionProgressProps) {
   if (status === "empty") {
+    if (filteredOutCount > 0) {
+      return (
+        <div className="mx-auto w-full max-w-2xl">
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-border px-6 py-14 text-center">
+            <HugeiconsIcon
+              icon={Alert02Icon}
+              size={28}
+              strokeWidth={1.5}
+              className="text-muted-foreground"
+            />
+            <div>
+              <h2 className="text-sm font-semibold">All Q&A pairs were filtered out</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {filteredOutCount === 1
+                  ? "1 Q&A pair was extracted, but it did not meet"
+                  : `${filteredOutCount} Q&A pairs were extracted, but none met`}{" "}
+                the bar for &quot;Extract most important insights only&quot;. Uncheck the
+                option in the rules step to keep all pairs.
+              </p>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <Button onClick={onBackToRules}>Back to rules</Button>
+              <Button variant="outline" onClick={onBackToFiles}>
+                Back to files
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="mx-auto w-full max-w-2xl">
         <div className="flex flex-col items-center gap-3 rounded-lg border border-border px-6 py-14 text-center">

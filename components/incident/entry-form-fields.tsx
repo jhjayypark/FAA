@@ -120,49 +120,53 @@ export function EntryFields({
   draft,
   onChange,
   idPrefix,
+  autoFocusTitle = false,
 }: {
   draft: EntryDraft;
   onChange: (patch: Partial<EntryDraft>) => void;
   idPrefix: string;
+  autoFocusTitle?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Select
-          value={draft.type}
-          onValueChange={(v) => onChange({ type: v as OverviewEntryType })}
-        >
-          <SelectTrigger
-            className="w-full sm:w-36"
-            aria-label="Entry type"
-            id={`${idPrefix}-type`}
+        <div className="flex flex-col gap-2 sm:w-36">
+          <Label htmlFor={`${idPrefix}-type`}>Type</Label>
+          <Select
+            value={draft.type}
+            onValueChange={(v) => onChange({ type: v as OverviewEntryType })}
           >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ENTRY_TYPE_ORDER.map((type) => {
-              const meta = ENTRY_TYPE_META[type];
-              return (
-                <SelectItem key={type} value={type}>
-                  <HugeiconsIcon
-                    icon={meta.icon}
-                    size={14}
-                    strokeWidth={1.8}
-                    className="text-muted-foreground"
-                  />
-                  {meta.label}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Input
-          className="flex-1"
-          value={draft.title}
-          onChange={(e) => onChange({ title: e.target.value })}
-          placeholder="Add interview date, related person, timeline note, or incident detail..."
-          aria-label="Entry title"
-        />
+            <SelectTrigger className="w-full" id={`${idPrefix}-type`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ENTRY_TYPE_ORDER.map((type) => {
+                const meta = ENTRY_TYPE_META[type];
+                return (
+                  <SelectItem key={type} value={type}>
+                    <HugeiconsIcon
+                      icon={meta.icon}
+                      size={14}
+                      strokeWidth={1.8}
+                      className="text-muted-foreground"
+                    />
+                    {meta.label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-1 flex-col gap-2">
+          <Label htmlFor={`${idPrefix}-title`}>Title</Label>
+          <Input
+            id={`${idPrefix}-title`}
+            autoFocus={autoFocusTitle}
+            value={draft.title}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Add interview date, related person, timeline note, or incident detail..."
+          />
+        </div>
       </div>
 
       {draft.type === "interview" && (

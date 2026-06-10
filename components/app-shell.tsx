@@ -80,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <NavLinks />
         <div className="mt-auto px-4 pb-4">
-          <p className="text-[11px] leading-relaxed text-muted-foreground/80">
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
             Audit materials stay in this browser. Confidential: internal use only.
           </p>
         </div>
