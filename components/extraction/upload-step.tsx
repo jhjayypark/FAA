@@ -156,7 +156,9 @@ function GroupCard({
           onChange={(e) => onNameChange(e.target.value)}
           placeholder={t("extraction.upload.group.namePlaceholder")}
           aria-label={t("extraction.upload.group.nameAria", { index: index + 1 })}
-          className="h-8 max-w-72 border-transparent bg-transparent px-2 text-sm font-medium shadow-none hover:border-input focus-visible:border-input"
+          // md:text-sm overrides the Input base's md:text-xs so the name header
+          // renders at a consistent 14px on desktop.
+          className="h-8 max-w-72 border-transparent bg-transparent px-2 text-sm font-semibold shadow-none hover:border-input focus-visible:border-input md:text-sm"
         />
         {removable && (
           <Button
