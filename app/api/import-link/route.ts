@@ -106,15 +106,6 @@ async function importPlaud(shareId: string) {
   const title: string = (file.filename ?? "Plaud transcript").trim();
   const lines: string[] = [];
   lines.push(`면담 대상: ${title}`);
-  if (typeof file.start_time === "number") {
-    const d = new Date(file.start_time);
-    if (!Number.isNaN(d.getTime())) {
-      const pad = (n: number) => String(n).padStart(2, "0");
-      lines.push(
-        `일시: ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
-      );
-    }
-  }
   lines.push("");
   for (const turn of turns) {
     lines.push(`${turn.speaker}: (${msToClock(turn.time)}) ${turn.parts.join(" ")}`);
@@ -124,6 +115,9 @@ async function importPlaud(shareId: string) {
     fileName: `${title} (Plaud)`,
     contentText: lines.join("\n"),
     sourceType: "transcript" as const,
+    // Epoch ms; the client formats the 일시 header line in the auditor's
+    // timezone (this serverless function runs in UTC and would shift dates).
+    recordedAtMs: typeof file.start_time === "number" ? file.start_time : null,
   };
 }
 

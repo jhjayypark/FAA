@@ -170,13 +170,26 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
       if (!res.ok) {
         throw new Error(typeof data?.error === "string" ? data.error : "Import failed.");
       }
+      // The 일시 header is formatted here, in the auditor's timezone; the
+      // serverless route runs in UTC and could shift the interview date.
+      let contentText: string = data.contentText;
+      if (typeof data.recordedAtMs === "number") {
+        const d = new Date(data.recordedAtMs);
+        if (!Number.isNaN(d.getTime())) {
+          const pad = (n: number) => String(n).padStart(2, "0");
+          const stamp = `일시: ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          const lines = contentText.split("\n");
+          lines.splice(1, 0, stamp);
+          contentText = lines.join("\n");
+        }
+      }
       setFiles((prev) => [
         ...prev,
         {
           id: newId(),
           fileName: data.fileName,
           fileType: "link",
-          contentText: data.contentText,
+          contentText,
           sourceType: data.sourceType === "transcript" ? "transcript" : "unknown",
         },
       ]);
