@@ -217,7 +217,12 @@ function buildSessionSection({
     });
   });
 
-  // Q&A slides, two items per slide, orderIndex order
+  // Q&A slides, two items per slide, orderIndex order. Answers carry the
+  // "(이름)" speaker prefix from the PPT template (예시 말투.pptx) when the
+  // interviewee is known.
+  const namePrefix = session.intervieweeName?.trim()
+    ? `(${session.intervieweeName.trim()}) `
+    : "";
   chunk(included, QA_PER_SLIDE).forEach((page) => {
     slides.push({
       kind: "qa",
@@ -225,7 +230,7 @@ function buildSessionSection({
         const citation = options.includeCitations ? q.sourceCitations[0] : undefined;
         return {
           question: truncate(oneLine(q.question), 110),
-          answer: truncate(q.answer.trim(), 420),
+          answer: truncate(`${namePrefix}${q.answer.trim()}`, 420),
           importance: q.importance,
           citation: citation
             ? {

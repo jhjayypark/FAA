@@ -27,6 +27,7 @@ import {
 import { condenseAnswer, condenseQuestion } from "@/lib/extraction/condense";
 import {
   isQuestionLike,
+  sharesSpecificTopicToken,
   STOPWORDS,
   topicOverlap,
 } from "@/lib/extraction/text-heuristics";
@@ -213,6 +214,16 @@ function extractMarkedQA(file: UploadedInterviewFile, fileIndex: number): RawQA[
   return items;
 }
 
+/** Interviewer turns at or below this length can fold into the answer as a probe. */
+const PROBE_MAX_LENGTH = 40;
+
+/**
+ * Anaphoric references to the thing currently being discussed ("해당 화물",
+ * "방금 말씀하신 건"). A short interviewer question built on one of these digs
+ * into the ongoing answer rather than opening a new topic.
+ */
+const ANAPHORIC_PROBE = /해당|방금|말씀하신/;
+
 /** Mode B: speaker-labeled dialogue ("감사인: ..." / "김민수: ..."). */
 function extractDialogueQA(file: UploadedInterviewFile, fileIndex: number): RawQA[] {
   const lines = splitLines(file.contentText);
@@ -306,10 +317,40 @@ function extractDialogueQA(file: UploadedInterviewFile, fileIndex: number): RawQ
       qTurns.push(recovered[next]);
       next++;
     }
+    // Answer = all interviewee turns that follow. A SHORT interviewer probe
+    // that continues the same topic and is itself answered does not end the
+    // exchange — the PPT template inlines it as "(진단팀: ...)" inside the
+    // answer (예시 말투.pptx) instead of fragmenting the flow into a new Q&A.
+    // Longer or off-topic interviewer turns end the answer as before.
     const aTurns: Turn[] = [];
-    while (next < recovered.length && !interviewerSet.has(recovered[next].speaker)) {
-      aTurns.push(recovered[next]);
-      next++;
+    const answerSegments: string[] = [];
+    let answerEnd = -1;
+    while (next < recovered.length) {
+      const cand = recovered[next];
+      if (!interviewerSet.has(cand.speaker)) {
+        aTurns.push(cand);
+        answerSegments.push(stripTimestamps(cand.text));
+        answerEnd = cand.end;
+        next++;
+        continue;
+      }
+      const probe = stripTimestamps(cand.text).trim();
+      const following = recovered[next + 1];
+      if (
+        aTurns.length > 0 &&
+        isQuestionLike(probe) &&
+        probe.length <= PROBE_MAX_LENGTH &&
+        following &&
+        !interviewerSet.has(following.speaker) &&
+        (ANAPHORIC_PROBE.test(probe) ||
+          sharesSpecificTopicToken(probe, answerSegments.join(" ")))
+      ) {
+        answerSegments.push(`(진단팀: ${probe})`);
+        answerEnd = cand.end;
+        next++;
+        continue;
+      }
+      break;
     }
     t = next;
     if (aTurns.length === 0) continue;
@@ -318,14 +359,12 @@ function extractDialogueQA(file: UploadedInterviewFile, fileIndex: number): RawQ
       qTurns.map((x) => x.text.match(TIMESTAMP)?.[1]).find(Boolean) ??
       aTurns.map((x) => x.text.match(TIMESTAMP)?.[1]).find(Boolean);
     const question = cleanQuestion(stripTimestamps(qTurns.map((x) => x.text).join(" ")));
-    const answer = stripTimestamps(aTurns.map((x) => x.text).join(" "));
+    const answer = answerSegments.join(" ").trim();
     if (!question || !answer) continue;
     items.push({
       question,
       answer,
-      citations: [
-        citationFor(file, aTurns[0].start, aTurns[aTurns.length - 1].end, 0.85),
-      ],
+      citations: [citationFor(file, aTurns[0].start, answerEnd, 0.85)],
       timestampLabel: timestamp,
       sortKey: fileIndex * 100000 + qTurns[0].lineIdx,
     });

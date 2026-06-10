@@ -132,6 +132,26 @@ export type TopicOverlap = {
  * merge unrelated items. Exact person-name matches are NOT required: STT
  * spelling variance ("최종호"/"최종오") makes name tokens unreliable.
  */
+/**
+ * Loose topic-continuity check: do the two texts share at least one SPECIFIC
+ * content token (latin word, number, or hangul token of >= 3 chars)? Used to
+ * decide whether a short interviewer probe continues the ongoing answer
+ * ("(진단팀: 해당 화물의 Dispatch는 누가 합니까?)") or opens a new topic.
+ * Far weaker than topicOverlap on purpose — a probe is short, so threshold
+ * counts would never be met.
+ */
+export function sharesSpecificTopicToken(aText: string, bText: string): boolean {
+  const a = contentTokens(aText);
+  const b = contentTokens(bText);
+  for (const token of a) {
+    if (!b.has(token)) continue;
+    if (/^[a-z]/.test(token) || /^\d+$/.test(token) || /^[가-힣]{3,}$/.test(token)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function topicOverlap(aText: string, bText: string): TopicOverlap {
   const a = contentTokens(aText);
   const b = contentTokens(bText);

@@ -17,7 +17,7 @@
 import { HIGH_KEYWORDS, MEDIUM_KEYWORDS } from "@/lib/extraction/mock-extractor";
 
 /** Spoken-question openers ("네, 그러면 ..."); longest first so "그" matches last. */
-const LEADING_FILLER = /^(?:그러니까|그러면|그래서|그니까|그럼|이제|네|아|어|음|그|자)[,，]?\s+/;
+const LEADING_FILLER = /^(?:그러니까|그러면|그래서|그니까|그럼|이제|혹시|네|아|어|음|그|자)[,，]?\s+/;
 
 /** Never strip a question down past this many characters. */
 const MIN_QUESTION_REMAINDER = 6;
@@ -30,6 +30,34 @@ const MIN_QUESTION_REMAINDER = 6;
 const TAG_QUESTION =
   /^(?:안\s*)?(?:그렇죠|그렇지요|그렇습니까|그쵸|그죠|맞죠|맞지요|맞습니까|맞나요|맞으시죠|맞으시지요|네|예|아닌가요|그런가요)\s*[?？]+$/;
 
+/** "배경" has a final consonant → "은?"; "출처" has none → "는?". */
+function topicParticle(noun: string): string {
+  const last = noun.charCodeAt(noun.length - 1);
+  if (last < 0xac00 || last > 0xd7a3) return "는";
+  return (last - 0xac00) % 28 > 0 ? "은" : "는";
+}
+
+/**
+ * PPT-style politeness trimming: end-anchored boilerplate is cut so the topic
+ * itself carries the question ("...구조는 어떻게 됩니까?" → "...구조는?").
+ * Each transform removes wording only — it never adds or changes meaning.
+ */
+function trimPoliteTail(q: string): string {
+  // cleanQuestion appends "?" to prompt-shaped statements, so written prompts
+  // can arrive ending ".?" — normalize before matching the tails below.
+  let out = q.replace(/\.\s*([?？])$/, "$1");
+  out = out.replace(/([은는])\s*어떻게\s*(?:됩니까|되십니까)\s*[?？]$/, "$1?");
+  out = out.replace(
+    /([가-힣A-Za-z0-9)])\s*에\s*대해(?:서)?\s*설명\s*부탁드립니다[.。?？]*$/,
+    (_, lastChar: string) => `${lastChar}${topicParticle(lastChar)}?`
+  );
+  out = out.replace(
+    /맞다고\s*(?:유선상\s*)?말씀\s*주셨는데\s*맞습니까\s*([?？])$/,
+    "맞습니까$1"
+  );
+  return out;
+}
+
 /**
  * Keep only the clearest formulation of a multi-part question. Interviewers
  * SPEAKING nearly always restate the question most clearly LAST, so when
@@ -39,8 +67,7 @@ const TAG_QUESTION =
  * alone. WRITTEN notes are the opposite: the main question is stated first and
  * later sentences are follow-ups, so notes-derived questions pass
  * `preferFirst` to select the first substantive interrogative instead.
- * Selection + filler stripping only — no 해요체→합쇼체 conversion, which is
- * too risky to do morphologically.
+ * Selection + politeness trimming only — meaning is never rewritten.
  */
 export function condenseQuestion(
   question: string,
@@ -69,7 +96,7 @@ export function condenseQuestion(
     if (rest.length < MIN_QUESTION_REMAINDER) break;
     q = rest;
   }
-  return q;
+  return trimPoliteTail(q);
 }
 
 /** Answers at or below this length are already terse (e.g. mode-C notes). */
@@ -131,8 +158,28 @@ const GENERIC_TOKENS = new Set([
  */
 const INLINE_FILLER = /(^|\s)(?:이제|그니까|그러니까|어|음|뭐)(?=\s|$)/g;
 
+/**
+ * Inline parentheticals — "(진단팀: 누가 합니까?)" interjections folded into an
+ * answer, "(송장 관리, 야드 관리)" asides — must never be split apart or
+ * separated from the clause they annotate. Their spaces are masked with a
+ * sentinel before clause splitting and restored afterwards.
+ */
+const PAREN_SPAN = /\([^()]{1,80}\)/g;
+const SPACE_SENTINEL = "\u0001";
+
+function maskParens(text: string): string {
+  return text.replace(PAREN_SPAN, (span) => span.replace(/\s/g, SPACE_SENTINEL));
+}
+
+function unmaskParens(text: string): string {
+  return text.replace(new RegExp(SPACE_SENTINEL, "g"), " ");
+}
+
 function splitClauses(answer: string): string[] {
-  const parts = answer.split(CLAUSE_BOUNDARY).map((p) => p.trim()).filter(Boolean);
+  const parts = maskParens(answer)
+    .split(CLAUSE_BOUNDARY)
+    .map((p) => unmaskParens(p).trim())
+    .filter(Boolean);
   const clauses: string[] = [];
   let pending = "";
   for (const part of parts) {
@@ -176,16 +223,66 @@ function stripInlineFillers(clause: string): string {
 }
 
 /**
+ * Direct-speech tone normalization (Answer Tone Rule, 예시 말투.pptx): spoken
+ * polite endings (해요체) unify to formal declarative 합쇼체. Only a WHITELIST
+ * of endings whose conversion is morphologically safe is mapped — anything
+ * else is left untouched rather than risk garbling. Each pattern requires a
+ * sentence-ish boundary after the ending, and "?" is deliberately NOT a
+ * boundary so interrogatives ("누가 해요?", inlined 진단팀 probes) keep their
+ * endings. Endings only — content, negation, and hedging are never altered.
+ */
+const FORMAL_ENDINGS: Array<[RegExp, string]> = [
+  [/있어요(?=[\s.,)…]|$)/g, "있습니다"],
+  [/없어요(?=[\s.,)…]|$)/g, "없습니다"],
+  [/해요(?=[\s.,)…]|$)/g, "합니다"],
+  [/[돼되]요(?=[\s.,)…]|$)/g, "됩니다"],
+  [/거[예에]요(?=[\s.,)…]|$)/g, "것입니다"],
+  [/드려요(?=[\s.,)…]|$)/g, "드립니다"],
+  [/하죠(?=[\s.,)…]|$)/g, "합니다"],
+  [/그렇죠(?=[\s.,)…]|$)/g, "그렇습니다"],
+  [/같아요(?=[\s.,)…]|$)/g, "같습니다"],
+  [/이에요(?=[\s.,)…]|$)/g, "입니다"],
+  [/이죠(?=[\s.,)…]|$)/g, "입니다"],
+  [/([가-힣])예요(?=[\s.,)…]|$)/g, "$1입니다"],
+  // Mid-answer connective "~하고요 그리고..." → "~하고 그리고..."; sentence-final
+  // 고요 is left alone (the bare stem cannot be conjugated safely).
+  [/([가-힣])고요(?=\s+\S)/g, "$1고"],
+];
+
+/** True when the syllable carries a ㅆ final consonant (했/갔/었/겠/됐...). */
+function hasSsangsiotFinal(syllable: string): boolean {
+  const code = syllable.charCodeAt(0);
+  if (code < 0xac00 || code > 0xd7a3) return false;
+  return (code - 0xac00) % 28 === 20;
+}
+
+/** Applies the whitelist ending conversions; exported for the LLM-free path tests. */
+export function formalizeEndings(text: string): string {
+  // Tense/modal contractions ending in ㅆ (했/갔/왔/됐/었/겠) + 어요: the
+  // morpheme already encodes tense, so 습니다 attaches safely ("했어요" →
+  // "했습니다"). Other stems ("들어요") conjugate irregularly and stay as-is.
+  let out = text.replace(
+    /([가-힣])어요(?=[\s.,)…]|$)/g,
+    (match, syllable: string) =>
+      hasSsangsiotFinal(syllable) ? `${syllable}습니다` : match
+  );
+  for (const [pattern, replacement] of FORMAL_ENDINGS) {
+    out = out.replace(pattern, replacement);
+  }
+  return out;
+}
+
+/**
  * Keep only the substantive clauses of a long spoken answer: facts (numbers,
  * names, keyword-bearing statements) survive; empty openers and trailing
  * commentary are dropped. Clauses are emitted in their original order.
  */
 export function condenseAnswer(answer: string): string {
   const text = answer.replace(/\s+/g, " ").trim();
-  if (text.length <= ANSWER_KEEP_THRESHOLD) return text;
+  if (text.length <= ANSWER_KEEP_THRESHOLD) return formalizeEndings(text);
 
   const clauses = splitClauses(text);
-  if (clauses.length <= 1) return text; // nothing to safely cut
+  if (clauses.length <= 1) return formalizeEndings(text); // nothing to safely cut
 
   const scored = clauses.map((clause, index) => ({
     clause,
@@ -210,5 +307,5 @@ export function condenseAnswer(answer: string): string {
   if (picked.length === 0) picked.push(scored[0]); // all filler: keep the opener
 
   picked.sort((a, b) => a.index - b.index);
-  return picked.map((c) => stripInlineFillers(c.clause)).join(" ");
+  return formalizeEndings(picked.map((c) => stripInlineFillers(c.clause)).join(" "));
 }
