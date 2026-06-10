@@ -5,6 +5,7 @@ import type { Importance, Incident, InterviewSession, ReportOptions } from "@/li
 import { FNS_LOCATIONS } from "@/lib/locations";
 import { useFAAStore } from "@/lib/store";
 import {
+  buildIncidentSlideModels,
   buildSlideModels,
   slideHeading,
   type ReportSlide,
@@ -181,6 +182,67 @@ function renderSlide(
       color: TEXT_DARK,
       fontFace: KOREAN_FONT,
       valign: "top",
+    });
+    return;
+  }
+
+  if (model.kind === "roster") {
+    // Lightweight table: label row, then one row per interviewee.
+    const columns: Array<{ label: string; x: number; w: number }> = [
+      { label: "INTERVIEWEE", x: MARGIN_X, w: 4.9 },
+      { label: "DATE", x: 5.6, w: 2.3 },
+      { label: "TOTAL Q&A", x: 8.0, w: 1.6 },
+      { label: "HIGH", x: 9.7, w: 1.2 },
+      { label: "IN REPORT", x: 11.0, w: 1.7 },
+    ];
+    columns.forEach((col) => {
+      slide.addText(col.label, {
+        x: col.x,
+        y: 1.55,
+        w: col.w,
+        h: 0.3,
+        fontSize: 9,
+        color: TEXT_MUTED,
+        fontFace: "Arial",
+        valign: "top",
+      });
+    });
+    model.rows.forEach((row, i) => {
+      const y = 2.0 + i * 0.55;
+      slide.addText(row.name, {
+        x: columns[0].x,
+        y,
+        w: columns[0].w,
+        h: 0.4,
+        fontSize: 13,
+        bold: true,
+        color: TEXT_DARK,
+        fontFace: KOREAN_FONT,
+        valign: "middle",
+      });
+      slide.addText(row.interviewDate, {
+        x: columns[1].x,
+        y,
+        w: columns[1].w,
+        h: 0.4,
+        fontSize: 11,
+        color: TEXT_DARK,
+        fontFace: MONO_FONT,
+        valign: "middle",
+      });
+      const counts = [row.totalQA, row.highCount, row.includedCount];
+      counts.forEach((count, c) => {
+        slide.addText(String(count), {
+          x: columns[c + 2].x,
+          y,
+          w: columns[c + 2].w,
+          h: 0.4,
+          fontSize: 12,
+          color: TEXT_DARK,
+          fontFace: "Arial",
+          valign: "middle",
+        });
+      });
     });
     return;
   }
@@ -374,6 +436,34 @@ function renderSlide(
   });
 }
 
+async function renderDeck({
+  slides,
+  options,
+  fileName,
+}: {
+  slides: ReportSlide[];
+  options: ReportOptions;
+  fileName: string;
+}): Promise<void> {
+  const PptxGenJSCtor = (await import("pptxgenjs")).default;
+  const pptx = new PptxGenJSCtor();
+
+  pptx.defineLayout({ name: "WIDE", width: PAGE_W, height: PAGE_H });
+  pptx.layout = "WIDE";
+  pptx.title = options.title;
+  pptx.author = "FAA / FNS Audit Assistant";
+
+  const themeHex = options.themeColor.replace(/^#/, "").toUpperCase();
+  slides.forEach((model, index) => {
+    const slide = pptx.addSlide();
+    slide.background = { color: "FFFFFF" };
+    renderSlide(pptx, slide, model, options, themeHex);
+    addSlideNumber(slide, index + 1);
+  });
+
+  await pptx.writeFile({ fileName });
+}
+
 /**
  * Builds the PPTX from the same slide model used by the HTML preview and
  * triggers a browser download. Throws on failure; callers surface a toast.
@@ -387,29 +477,39 @@ export async function generatePptx({
   session: InterviewSession;
   options: ReportOptions;
 }): Promise<void> {
-  const PptxGenJSCtor = (await import("pptxgenjs")).default;
-  const pptx = new PptxGenJSCtor();
-
-  pptx.defineLayout({ name: "WIDE", width: PAGE_W, height: PAGE_H });
-  pptx.layout = "WIDE";
-  pptx.title = options.title;
-  pptx.author = "FAA / FNS Audit Assistant";
-
-  const themeHex = options.themeColor.replace(/^#/, "").toUpperCase();
-  const slides = buildSlideModels({
-    incident,
-    session,
+  await renderDeck({
+    slides: buildSlideModels({
+      incident,
+      session,
+      options,
+      locationNames: resolveLocationNames(incident),
+    }),
     options,
-    locationNames: resolveLocationNames(incident),
+    fileName: `${sanitizeFileName(`FAA_${incident.name}_findings`)}.pptx`,
   });
+}
 
-  slides.forEach((model, index) => {
-    const slide = pptx.addSlide();
-    slide.background = { color: "FFFFFF" };
-    renderSlide(pptx, slide, model, options, themeHex);
-    addSlideNumber(slide, index + 1);
+/**
+ * Builds the incident-level combined PPTX covering all passed sessions and
+ * triggers a browser download. Throws on failure; callers surface a toast.
+ */
+export async function generateIncidentPptx({
+  incident,
+  sessions,
+  options,
+}: {
+  incident: Incident;
+  sessions: InterviewSession[];
+  options: ReportOptions;
+}): Promise<void> {
+  await renderDeck({
+    slides: buildIncidentSlideModels({
+      incident,
+      sessions,
+      options,
+      locationNames: resolveLocationNames(incident),
+    }),
+    options,
+    fileName: `${sanitizeFileName(`FAA_${incident.name}_all_interviews`)}.pptx`,
   });
-
-  const fileName = `${sanitizeFileName(`FAA_${incident.name}_findings`)}.pptx`;
-  await pptx.writeFile({ fileName });
 }

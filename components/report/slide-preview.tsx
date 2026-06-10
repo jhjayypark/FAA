@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import type { ReportOptions } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ImportanceBadge } from "@/components/importance-badge";
@@ -74,6 +75,32 @@ function SlideBody({ slide, options }: { slide: ReportSlide; options: ReportOpti
         <p className="text-[10px] leading-relaxed whitespace-pre-wrap text-foreground sm:text-sm">
           {slide.body}
         </p>
+      )}
+
+      {slide.kind === "roster" && (
+        <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-baseline gap-x-2 gap-y-1 sm:gap-x-5 sm:gap-y-2.5">
+          {["Interviewee", "Date", "Total Q&A", "High", "In report"].map((label) => (
+            <p
+              key={label}
+              className="text-[8px] tracking-wide text-muted-foreground uppercase sm:text-[10px]"
+            >
+              {label}
+            </p>
+          ))}
+          {slide.rows.map((row, i) => (
+            <Fragment key={i}>
+              <p className="min-w-0 truncate text-[10px] font-medium text-foreground sm:text-sm">
+                {row.name}
+              </p>
+              <p className="font-mono text-[9px] text-muted-foreground sm:text-xs">
+                {row.interviewDate}
+              </p>
+              <p className="text-[9px] text-foreground sm:text-xs">{row.totalQA}</p>
+              <p className="text-[9px] text-foreground sm:text-xs">{row.highCount}</p>
+              <p className="text-[9px] text-foreground sm:text-xs">{row.includedCount}</p>
+            </Fragment>
+          ))}
+        </div>
       )}
 
       {slide.kind === "summary" && (

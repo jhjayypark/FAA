@@ -202,7 +202,8 @@ export default function SessionResultsPage({
 
       <ReportDialog
         incident={incident}
-        session={session}
+        sessions={[session]}
+        scope="session"
         open={reportOpen}
         onOpenChange={setReportOpen}
       />

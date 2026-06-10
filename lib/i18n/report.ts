@@ -40,6 +40,10 @@ export const REPORT = {
     en: "{count} selected Q&A items will be included.",
     ko: "선택한 Q&A {count}건이 보고서에 포함됩니다.",
   },
+  "report.incidentSummary": {
+    en: "{sessions} interviewees · {count} selected Q&A items will be included.",
+    ko: "인터뷰 대상자 {sessions}명 · 선택한 Q&A {count}건이 보고서에 포함됩니다.",
+  },
   "report.noneSelected": {
     en: "No Q&A cards are selected for the report. Select cards on the results page first.",
     ko: "보고서에 포함할 Q&A 카드가 선택되지 않았습니다. 먼저 결과 페이지에서 카드를 선택하십시오.",

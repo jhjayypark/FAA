@@ -10,8 +10,10 @@ import {
   Delete02Icon,
   Mic01Icon,
   MoreHorizontalIcon,
+  PresentationBarChart01Icon,
 } from "@hugeicons/core-free-icons";
 import type { Incident, InterviewSession } from "@/lib/types";
+import { ReportDialog } from "@/components/report/report-dialog";
 import { useFAAStore } from "@/lib/store";
 import { useT } from "@/lib/i18n";
 import { formatDate } from "@/lib/format";
@@ -135,6 +137,7 @@ function SessionRow({
 export function InterviewTab({ incident }: { incident: Incident }) {
   const t = useT();
   const sessions = incident.interviewSessions;
+  const [combinedReportOpen, setCombinedReportOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-6">
@@ -198,14 +201,31 @@ export function InterviewTab({ incident }: { incident: Incident }) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-sm font-semibold">
-            {t("incidentDetail.sessions.title")}
-          </h2>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-sm font-semibold">
+              {t("incidentDetail.sessions.title")}
+            </h2>
+            {sessions.length > 0 && (
+              <span className="font-mono text-xs text-muted-foreground">
+                {sessions.length}
+              </span>
+            )}
+          </div>
           {sessions.length > 0 && (
-            <span className="font-mono text-xs text-muted-foreground">
-              {sessions.length}
-            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setCombinedReportOpen(true)}
+            >
+              <HugeiconsIcon
+                icon={PresentationBarChart01Icon}
+                size={14}
+                strokeWidth={1.8}
+              />
+              {t("incidentDetail.sessions.combinedReport")}
+            </Button>
           )}
         </div>
 
@@ -238,6 +258,16 @@ export function InterviewTab({ incident }: { incident: Incident }) {
           </div>
         )}
       </div>
+
+      {sessions.length > 0 && (
+        <ReportDialog
+          incident={incident}
+          sessions={sessions}
+          scope="incident"
+          open={combinedReportOpen}
+          onOpenChange={setCombinedReportOpen}
+        />
+      )}
     </div>
   );
 }

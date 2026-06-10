@@ -33,6 +33,14 @@ export type AppendixItem = {
   question: string;
 };
 
+export type RosterRow = {
+  name: string;
+  interviewDate: string;
+  totalQA: number;
+  highCount: number;
+  includedCount: number;
+};
+
 export type ReportSlide =
   | {
       kind: "cover";
@@ -42,6 +50,12 @@ export type ReportSlide =
       locationNames: string[];
     }
   | { kind: "context"; body: string }
+  | {
+      kind: "roster";
+      rows: RosterRow[];
+      pageIndex: number;
+      pageCount: number;
+    }
   | {
       kind: "summary";
       intervieweeName: string;
@@ -59,13 +73,16 @@ export type ReportSlide =
       items: FindingItem[];
       pageIndex: number;
       pageCount: number;
+      /** Set on incident-level decks; suffixes the slide heading. */
+      interviewee?: string;
     }
-  | { kind: "qa"; items: QASlideItem[] }
+  | { kind: "qa"; items: QASlideItem[]; interviewee?: string }
   | {
       kind: "appendix";
       items: AppendixItem[];
       pageIndex: number;
       pageCount: number;
+      interviewee?: string;
     };
 
 const IMPORTANCE_RANK: Record<Importance, number> = { High: 0, Medium: 1, Low: 2 };
@@ -73,6 +90,7 @@ const IMPORTANCE_RANK: Record<Importance, number> = { High: 0, Medium: 1, Low: 2
 const FINDINGS_PER_SLIDE = 5;
 const QA_PER_SLIDE = 2;
 const APPENDIX_PER_SLIDE = 8;
+const ROSTER_PER_SLIDE = 8;
 
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -93,6 +111,10 @@ export function includedItems(session: InterviewSession): QAItem[] {
     .sort((a, b) => a.orderIndex - b.orderIndex);
 }
 
+function withInterviewee(heading: string, interviewee?: string): string {
+  return interviewee ? `${heading} — ${interviewee}` : heading;
+}
+
 /** English heading shown on each content slide. Identical in preview and PPTX. */
 export function slideHeading(slide: ReportSlide): string {
   switch (slide.kind) {
@@ -100,52 +122,55 @@ export function slideHeading(slide: ReportSlide): string {
       return "";
     case "context":
       return "Incident Context";
+    case "roster":
+      return slide.pageCount > 1
+        ? `Interviewee Overview (${slide.pageIndex + 1} of ${slide.pageCount})`
+        : "Interviewee Overview";
     case "summary":
       return "Interviewee Summary";
     case "findings":
-      return slide.pageCount > 1
-        ? `Key Findings (${slide.pageIndex + 1} of ${slide.pageCount})`
-        : "Key Findings";
+      return withInterviewee(
+        slide.pageCount > 1
+          ? `Key Findings (${slide.pageIndex + 1} of ${slide.pageCount})`
+          : "Key Findings",
+        slide.interviewee
+      );
     case "qa":
-      return "Q&A";
+      return withInterviewee("Q&A", slide.interviewee);
     case "appendix":
-      return slide.pageCount > 1
-        ? `Appendix: Selected Q&A (${slide.pageIndex + 1} of ${slide.pageCount})`
-        : "Appendix: Selected Q&A";
+      return withInterviewee(
+        slide.pageCount > 1
+          ? `Appendix: Selected Q&A (${slide.pageIndex + 1} of ${slide.pageCount})`
+          : "Appendix: Selected Q&A",
+        slide.interviewee
+      );
   }
 }
 
-export function buildSlideModels({
-  incident,
+function displayName(session: InterviewSession): string {
+  return session.intervieweeName?.trim() || UNKNOWN_INTERVIEWEE;
+}
+
+/**
+ * Summary, findings, and Q&A slides for one session. When `interviewee` is
+ * set (incident-level decks), findings and Q&A slides carry it so their
+ * headings identify the session.
+ */
+function buildSessionSection({
   session,
   options,
-  locationNames,
+  interviewee,
 }: {
-  incident: Incident;
   session: InterviewSession;
   options: ReportOptions;
-  locationNames: string[];
+  interviewee?: string;
 }): ReportSlide[] {
   const slides: ReportSlide[] = [];
   const included = includedItems(session);
   const all = session.qaItems;
+  const tag = interviewee ? { interviewee } : {};
 
-  // 1) Cover
-  slides.push({
-    kind: "cover",
-    title: options.title.trim() || `${incident.name} Interview Findings`,
-    incidentName: incident.name,
-    generatedOn: formatDate(nowIso()),
-    locationNames: options.includeLocations ? locationNames : [],
-  });
-
-  // 2) Incident context
-  const context = incident.context?.trim();
-  if (options.includeIncidentContext && context) {
-    slides.push({ kind: "context", body: truncate(context, 900) });
-  }
-
-  // 3) Interviewee summary
+  // Interviewee summary
   const fileNames = session.uploadedFiles.map((f) => f.fileName);
   const fileLines = fileNames.slice(0, 4);
   if (fileNames.length > 4) {
@@ -153,7 +178,7 @@ export function buildSlideModels({
   }
   slides.push({
     kind: "summary",
-    intervieweeName: session.intervieweeName?.trim() || UNKNOWN_INTERVIEWEE,
+    intervieweeName: displayName(session),
     interviewDate: formatDate(session.interviewDate) || "Not specified",
     extractionDate: formatDate(session.createdAt) || "Not specified",
     fileLines,
@@ -164,7 +189,7 @@ export function buildSlideModels({
     includedCount: included.length,
   });
 
-  // 4) Key findings: High-importance included items first. If no High items
+  // Key findings: High-importance included items first. If no High items
   // exist, fall back to the top included items by importance rank.
   const highIncluded = included.filter((q) => q.importance === "High");
   const findingsSource =
@@ -188,10 +213,11 @@ export function buildSlideModels({
         answerExcerpt: truncate(oneLine(q.answer), 140),
         importance: q.importance,
       })),
+      ...tag,
     });
   });
 
-  // 5) Q&A slides, two items per slide, orderIndex order
+  // Q&A slides, two items per slide, orderIndex order
   chunk(included, QA_PER_SLIDE).forEach((page) => {
     slides.push({
       kind: "qa",
@@ -209,24 +235,146 @@ export function buildSlideModels({
             : undefined,
         };
       }),
+      ...tag,
     });
   });
 
-  // 6) Appendix: compact numbered list of all included questions
-  if (options.includeAppendix && included.length > 0) {
-    const numbered = included.map((q, i) => ({
-      number: i + 1,
-      question: truncate(oneLine(q.question), 120),
-    }));
-    const appendixPages = chunk(numbered, APPENDIX_PER_SLIDE);
-    appendixPages.forEach((page, pageIndex) => {
-      slides.push({
-        kind: "appendix",
-        items: page,
-        pageIndex,
-        pageCount: appendixPages.length,
-      });
+  return slides;
+}
+
+/**
+ * Appendix slides for one session: compact numbered list of all included
+ * questions, numbered 1..n within the session, 8 per slide. Empty when the
+ * appendix is disabled or nothing is included.
+ */
+function buildSessionAppendix({
+  session,
+  options,
+  interviewee,
+}: {
+  session: InterviewSession;
+  options: ReportOptions;
+  interviewee?: string;
+}): ReportSlide[] {
+  const included = includedItems(session);
+  if (!options.includeAppendix || included.length === 0) return [];
+
+  const tag = interviewee ? { interviewee } : {};
+  const numbered = included.map((q, i) => ({
+    number: i + 1,
+    question: truncate(oneLine(q.question), 120),
+  }));
+  const appendixPages = chunk(numbered, APPENDIX_PER_SLIDE);
+  return appendixPages.map((page, pageIndex) => ({
+    kind: "appendix",
+    items: page,
+    pageIndex,
+    pageCount: appendixPages.length,
+    ...tag,
+  }));
+}
+
+/** Slide model for the single-session report. */
+export function buildSlideModels({
+  incident,
+  session,
+  options,
+  locationNames,
+}: {
+  incident: Incident;
+  session: InterviewSession;
+  options: ReportOptions;
+  locationNames: string[];
+}): ReportSlide[] {
+  const slides: ReportSlide[] = [];
+
+  // 1) Cover
+  slides.push({
+    kind: "cover",
+    title: options.title.trim() || `${incident.name} Interview Findings`,
+    incidentName: incident.name,
+    generatedOn: formatDate(nowIso()),
+    locationNames: options.includeLocations ? locationNames : [],
+  });
+
+  // 2) Incident context
+  const context = incident.context?.trim();
+  if (options.includeIncidentContext && context) {
+    slides.push({ kind: "context", body: truncate(context, 900) });
+  }
+
+  // 3) Summary, findings, Q&A, then appendix
+  slides.push(...buildSessionSection({ session, options }));
+  slides.push(...buildSessionAppendix({ session, options }));
+
+  return slides;
+}
+
+/**
+ * Slide model for the incident-level combined report covering all passed
+ * sessions, in the given order. The roster lists every session; sessions
+ * without included Q&A items are skipped after that. Appendix slides for all
+ * sessions come after every interviewee section.
+ */
+export function buildIncidentSlideModels({
+  incident,
+  sessions,
+  options,
+  locationNames,
+}: {
+  incident: Incident;
+  sessions: InterviewSession[];
+  options: ReportOptions;
+  locationNames: string[];
+}): ReportSlide[] {
+  const slides: ReportSlide[] = [];
+
+  // 1) Cover
+  slides.push({
+    kind: "cover",
+    title: options.title.trim() || `${incident.name} Combined Interview Findings`,
+    incidentName: incident.name,
+    generatedOn: formatDate(nowIso()),
+    locationNames: options.includeLocations ? locationNames : [],
+  });
+
+  // 2) Incident context
+  const context = incident.context?.trim();
+  if (options.includeIncidentContext && context) {
+    slides.push({ kind: "context", body: truncate(context, 900) });
+  }
+
+  // 3) Roster: one row per session, even when nothing is included
+  const rows: RosterRow[] = sessions.map((session) => ({
+    name: displayName(session),
+    interviewDate: formatDate(session.interviewDate) || "Not specified",
+    totalQA: session.qaItems.length,
+    highCount: session.qaItems.filter((q) => q.importance === "High").length,
+    includedCount: includedItems(session).length,
+  }));
+  const rosterPages = chunk(rows, ROSTER_PER_SLIDE);
+  rosterPages.forEach((page, pageIndex) => {
+    slides.push({
+      kind: "roster",
+      rows: page,
+      pageIndex,
+      pageCount: rosterPages.length,
     });
+  });
+
+  // 4) One section per session with included items
+  const reportable = sessions.filter((s) => includedItems(s).length > 0);
+  for (const session of reportable) {
+    slides.push(
+      ...buildSessionSection({ session, options, interviewee: displayName(session) })
+    );
+  }
+
+  // 5) Appendix sections after all interviewee sections, in session order
+  for (const session of reportable) {
+    slides.push(
+      ...buildSessionAppendix({ session, options, interviewee: displayName(session) })
+    );
   }
 
   return slides;

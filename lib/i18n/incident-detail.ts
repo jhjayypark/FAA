@@ -118,6 +118,10 @@ export const INCIDENT_DETAIL = {
     en: "Interview Sessions",
     ko: "인터뷰 세션",
   },
+  "incidentDetail.sessions.combinedReport": {
+    en: "Combined report (PPTX)",
+    ko: "전체 종합 보고서 (PPTX)",
+  },
   "incidentDetail.sessions.emptyTitle": {
     en: "No interview sessions yet",
     ko: "아직 인터뷰 세션이 없습니다",

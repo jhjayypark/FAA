@@ -14,8 +14,11 @@ import type { Incident, InterviewSession, ReportOptions } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { locationById, useAllLocations } from "@/lib/store";
-import { generatePptx } from "@/lib/report/generate-pptx";
-import { buildSlideModels } from "@/components/report/slide-model";
+import { generateIncidentPptx, generatePptx } from "@/lib/report/generate-pptx";
+import {
+  buildIncidentSlideModels,
+  buildSlideModels,
+} from "@/components/report/slide-model";
 import { SlidePreview } from "@/components/report/slide-preview";
 import {
   Dialog,
@@ -49,18 +52,25 @@ function normalizeHex(value: string): string {
 
 export function ReportDialog({
   incident,
-  session,
+  sessions,
+  scope,
   open,
   onOpenChange,
 }: {
   incident: Incident;
-  session: InterviewSession;
+  sessions: InterviewSession[];
+  /** "session" reports on sessions[0]; "incident" combines all sessions. */
+  scope: "session" | "incident";
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useT();
   const [view, setView] = useState<"options" | "preview">("options");
-  const [title, setTitle] = useState(`${incident.name} Interview Findings`);
+  const [title, setTitle] = useState(
+    scope === "incident"
+      ? `${incident.name} Combined Interview Findings`
+      : `${incident.name} Interview Findings`
+  );
   const [hexInput, setHexInput] = useState(DEFAULT_THEME);
   const [themeColor, setThemeColor] = useState(DEFAULT_THEME);
   const [templateFileName, setTemplateFileName] = useState<string | undefined>(undefined);
@@ -93,8 +103,12 @@ export function ReportDialog({
   );
 
   const includedCount = useMemo(
-    () => session.qaItems.filter((q) => q.includedInReport).length,
-    [session.qaItems]
+    () =>
+      sessions.reduce(
+        (sum, s) => sum + s.qaItems.filter((q) => q.includedInReport).length,
+        0
+      ),
+    [sessions]
   );
 
   const titleValid = title.trim().length > 0;
@@ -115,13 +129,17 @@ export function ReportDialog({
     [title, themeColor, includes, templateFileName]
   );
 
-  const slides = useMemo(
-    () =>
-      view === "preview"
-        ? buildSlideModels({ incident, session, options: reportOptions, locationNames })
-        : [],
-    [view, incident, session, reportOptions, locationNames]
-  );
+  const slides = useMemo(() => {
+    if (view !== "preview") return [];
+    return scope === "incident"
+      ? buildIncidentSlideModels({ incident, sessions, options: reportOptions, locationNames })
+      : buildSlideModels({
+          incident,
+          session: sessions[0],
+          options: reportOptions,
+          locationNames,
+        });
+  }, [view, scope, incident, sessions, reportOptions, locationNames]);
 
   function handleHexInput(value: string) {
     setHexInput(value);
@@ -139,7 +157,11 @@ export function ReportDialog({
   async function handleDownload() {
     setDownloading(true);
     try {
-      await generatePptx({ incident, session, options: reportOptions });
+      if (scope === "incident") {
+        await generateIncidentPptx({ incident, sessions, options: reportOptions });
+      } else {
+        await generatePptx({ incident, session: sessions[0], options: reportOptions });
+      }
       toast.success(t("report.toastDownloaded"));
     } catch (err) {
       toast.error(
@@ -254,12 +276,17 @@ export function ReportDialog({
 
                 {includedCount > 0 ? (
                   <p className="text-xs text-muted-foreground">
-                    {t(
-                      includedCount === 1
-                        ? "report.selectedSummary.one"
-                        : "report.selectedSummary.many",
-                      { count: includedCount }
-                    )}
+                    {scope === "incident"
+                      ? t("report.incidentSummary", {
+                          sessions: sessions.length,
+                          count: includedCount,
+                        })
+                      : t(
+                          includedCount === 1
+                            ? "report.selectedSummary.one"
+                            : "report.selectedSummary.many",
+                          { count: includedCount }
+                        )}
                   </p>
                 ) : (
                   <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2.5">
