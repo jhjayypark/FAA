@@ -40,30 +40,41 @@ function llmConfigured(): boolean {
   return false;
 }
 
+export type AssistantAttachment = { fileName: string; contentText: string };
+
 export async function answerQuestion({
   incident,
   question,
   locations = FNS_LOCATIONS,
+  allIncidents = [],
+  attachments = [],
 }: {
-  incident: Incident;
+  /** null = general mode: answers from the whole workspace, no incident scope. */
+  incident: Incident | null;
   question: string;
   /** Merged seed + custom location list (e.g. from useAllLocations()). */
   locations?: FNSLocation[];
+  /** All incidents, used for cross-incident answers in general mode. */
+  allIncidents?: Incident[];
+  /** Files attached to this message; searched like uploaded material. */
+  attachments?: AssistantAttachment[];
 }): Promise<string> {
   // Simulated analysis latency; mirrors a real provider round trip.
   await delay(700 + Math.floor(Math.random() * 500));
 
   if (llmConfigured()) {
     // TODO: Replace mock assistant with real LLM provider call using
-    // ASSISTANT_SYSTEM_PROMPT + buildAssistantContext(incident, locations).
+    // ASSISTANT_SYSTEM_PROMPT + buildAssistantContext(incident, locations);
+    // in general mode (incident === null) concatenate contexts of
+    // allIncidents and append attachment contents to the user turn.
     const systemPrompt = ASSISTANT_SYSTEM_PROMPT;
-    const context = buildAssistantContext(incident, locations);
+    const context = incident ? buildAssistantContext(incident, locations) : "";
     throw new Error(
       `LLM provider not configured (prepared ${systemPrompt.length + context.length} prompt chars).`
     );
   }
 
-  return mockAnswer(incident, question.trim(), locations);
+  return mockAnswer(incident, question.trim(), locations, allIncidents, attachments);
 }
 
 // ---------------------------------------------------------------------------
@@ -77,6 +88,7 @@ type Intent =
   | "importance"
   | "location"
   | "timeline"
+  | "incidents"
   | "search";
 
 /** A Q&A item annotated with its session interviewee and citation files. */
@@ -84,6 +96,8 @@ type QARef = {
   qa: QAItem;
   interviewee: string;
   fileNames: string[];
+  /** Set in general mode so replies say which incident a quote comes from. */
+  incidentName?: string;
 };
 
 const IMPORTANCE_ORDER: Record<Importance, number> = { High: 0, Medium: 1, Low: 2 };
@@ -99,36 +113,72 @@ const NEGATION = /없|아니|않|모름|불가/;
 const UNCERTAIN = /모름|기억나|확인 필요|애매/;
 
 function mockAnswer(
-  incident: Incident,
+  incident: Incident | null,
   question: string,
-  locations: FNSLocation[]
+  locations: FNSLocation[],
+  allIncidents: Incident[],
+  attachments: AssistantAttachment[]
 ): string {
+  const general = incident === null;
+  const scope = general ? allIncidents : [incident];
   const intent = detectIntent(question);
-  const refs = collectQA(incident);
+  const refs = collectQA(scope, general);
   const hasMaterial =
-    incident.interviewSessions.length > 0 || incident.overviewEntries.length > 0;
+    attachments.length > 0 ||
+    scope.some(
+      (i) => i.interviewSessions.length > 0 || i.overviewEntries.length > 0
+    );
+
+  if (general && intent === "incidents") return answerIncidentsOverview(allIncidents);
 
   // Involved locations live on the incident record itself, so the location
   // intent stays answerable even before any interview or overview material.
-  if (intent === "location") return answerLocations(incident, locations);
+  if (intent === "location") {
+    if (!general) return answerLocations(incident, locations);
+    const lines = allIncidents
+      .filter((i) => i.involvedLocationIds.length > 0)
+      .slice(0, 6)
+      .map((i) => {
+        const names = i.involvedLocationIds
+          .map((id) => locations.find((l) => l.id === id)?.name ?? id)
+          .join(", ");
+        return `- ${i.name}: ${names}`;
+      });
+    if (lines.length === 0) return "등록된 관련 장소가 있는 인시던트가 없습니다.";
+    return ["인시던트별 관련 장소는 다음과 같습니다.", ...lines].join("\n");
+  }
 
-  // No sessions and no overview data at all: nothing can be verified.
+  // No sessions, overview data, or attachments at all: nothing to verify.
   if (!hasMaterial) return ASSISTANT_CANNOT_VERIFY;
+
+  const overviewEntries = scope.flatMap((i) => i.overviewEntries);
 
   switch (intent) {
     case "contradiction":
       return answerContradiction(refs);
     case "followup":
-      return answerFollowUp(refs, incident);
+      return answerFollowUp(refs, overviewEntries);
     case "report":
       return answerReport(refs);
     case "importance":
       return answerImportance(refs);
     case "timeline":
-      return answerTimeline(incident);
+      return answerTimelineEntries(overviewEntries);
     default:
-      return answerKeywordSearch(refs, question);
+      return answerKeywordSearch(refs, question, attachments);
   }
+}
+
+/** General mode: workspace overview of all incidents. */
+function answerIncidentsOverview(incidents: Incident[]): string {
+  if (incidents.length === 0) {
+    return "등록된 인시던트가 없습니다. 먼저 인시던트를 생성해 주세요.";
+  }
+  const lines = incidents.slice(0, 10).map((i, idx) => {
+    const qaCount = i.interviewSessions.reduce((n, s) => n + s.qaItems.length, 0);
+    return `${idx + 1}. ${i.name} : 인터뷰 세션 ${i.interviewSessions.length}건, Q&A ${qaCount}건`;
+  });
+  return [`현재 등록된 인시던트는 ${incidents.length}건입니다.`, ...lines].join("\n");
 }
 
 /**
@@ -144,21 +194,26 @@ function detectIntent(question: string): Intent {
   if (/중요|쟁점|핵심|important/.test(q)) return "importance";
   if (/장소|위치|어디/.test(q)) return "location";
   if (/언제|날짜|타임라인/.test(q)) return "timeline";
+  if (/(인시던트|사건).*(목록|현황|몇 ?건|어떤 게|뭐가 있)/.test(q)) return "incidents";
   return "search";
 }
 
-function collectQA(incident: Incident): QARef[] {
-  return incident.interviewSessions.flatMap((session) =>
-    session.qaItems.map((qa) => ({
-      qa,
-      interviewee: session.intervieweeName || "미상",
-      fileNames: [...new Set(qa.sourceCitations.map((c) => c.fileName))],
-    }))
+function collectQA(incidents: Incident[], labelIncident: boolean): QARef[] {
+  return incidents.flatMap((incident) =>
+    incident.interviewSessions.flatMap((session) =>
+      session.qaItems.map((qa) => ({
+        qa,
+        interviewee: session.intervieweeName || "미상",
+        fileNames: [...new Set(qa.sourceCitations.map((c) => c.fileName))],
+        incidentName: labelIncident ? incident.name : undefined,
+      }))
+    )
   );
 }
 
 function fileLabel(ref: QARef): string {
-  return ref.fileNames.join(", ") || "없음";
+  const files = ref.fileNames.join(", ") || "없음";
+  return ref.incidentName ? `${files} / ${ref.incidentName}` : files;
 }
 
 // --- Intent: importance ----------------------------------------------------
@@ -246,7 +301,7 @@ const GENERIC_STUB_QUESTION = /^수기 노트에 기록된 사항은\?$/;
  * low-confidence citations, and already scheduled future interviews.
  * No new topics are invented.
  */
-function answerFollowUp(refs: QARef[], incident: Incident): string {
+function answerFollowUp(refs: QARef[], overviewEntries: OverviewEntry[]): string {
   const uncertain = refs
     .filter(
       (r) =>
@@ -273,7 +328,7 @@ function answerFollowUp(refs: QARef[], incident: Incident): string {
   }
   const lines = items.map((line, i) => `${i + 1}. ${line}`);
   const now = Date.now();
-  const upcoming = incident.overviewEntries
+  const upcoming = overviewEntries
     .filter(
       (e) => e.type === "interview" && e.dateTime && new Date(e.dateTime).getTime() > now
     )
@@ -311,8 +366,8 @@ function answerLocations(incident: Incident, locations: FNSLocation[]): string {
 
 // --- Intent: timeline ---------------------------------------------------------
 
-function answerTimeline(incident: Incident): string {
-  const dated = incident.overviewEntries
+function answerTimelineEntries(overviewEntries: OverviewEntry[]): string {
+  const dated = overviewEntries
     .filter((e): e is OverviewEntry & { dateTime: string } => Boolean(e.dateTime))
     .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
     .slice(0, 8);
@@ -327,9 +382,41 @@ function answerTimeline(incident: Incident): string {
 
 // --- Fallback: keyword search ---------------------------------------------------
 
-function answerKeywordSearch(refs: QARef[], question: string): string {
+/** Line-level search over attached files; quotes matching lines verbatim. */
+function searchAttachments(
+  attachments: AssistantAttachment[],
+  tokens: string[]
+): string[] {
+  const hits: { score: number; text: string }[] = [];
+  for (const att of attachments) {
+    for (const raw of att.contentText.split(/\r?\n/)) {
+      const line = raw.trim();
+      if (line.length < 6) continue;
+      const lower = line.toLowerCase();
+      const score = tokens.reduce((n, t) => n + (lower.includes(t) ? 1 : 0), 0);
+      if (score > 0) {
+        hits.push({ score, text: `"${truncate(line, 90)}" (첨부: ${att.fileName})` });
+      }
+    }
+  }
+  return hits
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((h) => h.text);
+}
+
+function answerKeywordSearch(
+  refs: QARef[],
+  question: string,
+  attachments: AssistantAttachment[] = []
+): string {
   const tokens = questionTokens(question);
-  if (tokens.length === 0 || refs.length === 0) return ASSISTANT_CANNOT_VERIFY;
+  if (tokens.length === 0) return ASSISTANT_CANNOT_VERIFY;
+  const attachmentLines = searchAttachments(attachments, tokens);
+  if (refs.length === 0) {
+    if (attachmentLines.length === 0) return ASSISTANT_CANNOT_VERIFY;
+    return ["첨부 파일에서 관련된 내용을 찾았습니다.", ...attachmentLines].join("\n");
+  }
   const scored = refs
     .map((r) => {
       const haystack = `${r.qa.question} ${r.qa.answer}`.toLowerCase();
@@ -339,7 +426,10 @@ function answerKeywordSearch(refs: QARef[], question: string): string {
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
-  if (scored.length === 0) return ASSISTANT_CANNOT_VERIFY;
+  if (scored.length === 0) {
+    if (attachmentLines.length === 0) return ASSISTANT_CANNOT_VERIFY;
+    return ["첨부 파일에서 관련된 내용을 찾았습니다.", ...attachmentLines].join("\n");
+  }
   const lines = scored.map(
     ({ r }, i) =>
       `${i + 1}. Q: ${truncate(r.qa.question, 60)} / A: ${truncate(r.qa.answer, 100)} (출처: ${fileLabel(r)}, 면담: ${r.interviewee})`
@@ -349,16 +439,24 @@ function answerKeywordSearch(refs: QARef[], question: string): string {
   // only logistics records exist), say so before quoting what IS related, so
   // a partial match never reads as a direct answer. A small uncovered
   // remainder is treated as phrasing noise, not a missing topic.
-  const allText = refs.map((r) => `${r.qa.question} ${r.qa.answer}`).join(" ").toLowerCase();
+  const attachmentText = attachments.map((a) => a.contentText).join(" ").toLowerCase();
+  const allText =
+    refs.map((r) => `${r.qa.question} ${r.qa.answer}`).join(" ").toLowerCase() +
+    " " +
+    attachmentText;
   const uncovered = tokens.filter((t) => !allText.includes(t));
+  const extra = attachmentLines.length
+    ? ["", "첨부 파일에서 찾은 내용:", ...attachmentLines]
+    : [];
   if (uncovered.length / tokens.length > 0.5) {
     return [
       ASSISTANT_CANNOT_VERIFY,
       "다만 질문과 관련된 인터뷰 내용은 다음과 같습니다.",
       ...lines,
+      ...extra,
     ].join("\n");
   }
-  return ["관련된 인터뷰 내용은 다음과 같습니다.", ...lines].join("\n");
+  return ["관련된 인터뷰 내용은 다음과 같습니다.", ...lines, ...extra].join("\n");
 }
 
 // ---------------------------------------------------------------------------

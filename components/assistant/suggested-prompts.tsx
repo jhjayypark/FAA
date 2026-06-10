@@ -8,16 +8,26 @@ export const SUGGESTED_PROMPTS = [
   "추가 인터뷰에서 물어봐야 할 질문을 추천해줘.",
 ] as const;
 
+/** Workspace-wide prompts shown in general mode (no incident selected). */
+export const GENERAL_PROMPTS = [
+  "등록된 인시던트 현황 알려줘",
+  "전체 인터뷰에서 서로 모순되는 답변이 있어?",
+  "추가 확인이 필요한 항목들을 정리해줘",
+] as const;
+
 export function SuggestedPrompts({
   onSelect,
   disabled,
+  mode = "incident",
 }: {
   onSelect: (question: string) => void;
   disabled?: boolean;
+  mode?: "incident" | "general";
 }) {
+  const prompts = mode === "general" ? GENERAL_PROMPTS : SUGGESTED_PROMPTS;
   return (
     <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
-      {SUGGESTED_PROMPTS.map((prompt) => (
+      {prompts.map((prompt) => (
         <button
           key={prompt}
           type="button"

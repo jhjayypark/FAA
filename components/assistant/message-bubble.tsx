@@ -11,8 +11,24 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
   return (
     <div className={cn("flex flex-col gap-1", isUser ? "items-end" : "items-start")}>
       {isUser ? (
-        <div className="max-w-[80%] rounded-lg bg-primary px-3.5 py-2.5 text-sm whitespace-pre-wrap text-primary-foreground">
-          {message.content}
+        <div className="flex max-w-[80%] flex-col items-end gap-1">
+          {message.attachments && message.attachments.length > 0 && (
+            <div className="flex flex-wrap justify-end gap-1">
+              {message.attachments.map((name) => (
+                <span
+                  key={name}
+                  className="max-w-52 truncate rounded-md border border-border bg-muted/60 px-2 py-0.5 font-mono text-[10px] text-muted-foreground"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
+          {message.content && (
+            <div className="rounded-lg bg-primary px-3.5 py-2.5 text-sm whitespace-pre-wrap text-primary-foreground">
+              {message.content}
+            </div>
+          )}
         </div>
       ) : (
         <div className="max-w-[85%] rounded-lg border bg-card px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap">

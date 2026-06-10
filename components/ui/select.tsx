@@ -61,7 +61,9 @@ function SelectTrigger({
 function SelectContent({
   className,
   children,
-  position = "item-aligned",
+  // "popper" drops the list below the trigger; the "item-aligned" default
+  // overlays and hides the trigger, which reads as a rendering bug.
+  position = "popper",
   align = "center",
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {

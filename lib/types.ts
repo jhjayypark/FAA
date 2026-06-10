@@ -92,7 +92,12 @@ export type ChatMessage = {
   role: ChatRole;
   content: string;
   createdAt: string;
+  /** File names attached to this user message, for display. */
+  attachments?: string[];
 };
+
+/** Thread key for the assistant's general mode (no incident selected). */
+export const GENERAL_THREAD = "general";
 
 /** Shape returned by the extraction pipeline before items are persisted. */
 export type ExtractedQAItem = Omit<QAItem, "id" | "orderIndex" | "isManuallyEdited">;

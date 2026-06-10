@@ -3,6 +3,20 @@ import type { Dict } from "@/lib/i18n";
 /** Strings for the assistant module (incident-scoped chat). */
 export const ASSISTANT = {
   "assistant.title": { en: "Assistant", ko: "어시스턴트" },
+  "assistant.general": { en: "General", ko: "일반 모드" },
+  "assistant.generalLabel": { en: "General conversation", ko: "일반 대화" },
+  "assistant.greeting": { en: "Hello, {name}", ko: "{name}님, 안녕하세요" },
+  "assistant.generalHint": {
+    en: "Ask anything across the workspace, or pick an incident below to ground answers in its audit materials.",
+    ko: "워크스페이스 전체에 대해 질문하거나, 아래에서 인시던트를 선택하면 해당 감사 자료에 근거해 답변합니다.",
+  },
+  "assistant.attach": { en: "Attach files", ko: "파일 첨부" },
+  "assistant.attachRemove": { en: "Remove {name}", ko: "{name} 제거" },
+  "assistant.attachParsing": { en: "Reading file...", ko: "파일 읽는 중..." },
+  "assistant.composerPlaceholderGeneral": {
+    en: "Ask anything...",
+    ko: "무엇이든 물어보세요...",
+  },
   "assistant.selectIncident": { en: "Select incident", ko: "인시던트 선택" },
   "assistant.clear": { en: "Clear conversation", ko: "대화 지우기" },
   "assistant.clearDescription": {
