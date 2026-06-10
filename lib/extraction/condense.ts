@@ -17,7 +17,7 @@
 import { HIGH_KEYWORDS, MEDIUM_KEYWORDS } from "@/lib/extraction/mock-extractor";
 
 /** Spoken-question openers ("네, 그러면 ..."); longest first so "그" matches last. */
-const LEADING_FILLER = /^(?:그러니까|그러면|그래서|그니까|그럼|이제|혹시|네|아|어|음|그|자)[,，]?\s+/;
+const LEADING_FILLER = /^(?:그러니까|그러면|그래서|그니까|그럼|이제|혹시|좀|네|아|어|음|그|자)[,，]?\s+/;
 
 /** Never strip a question down past this many characters. */
 const MIN_QUESTION_REMAINDER = 6;

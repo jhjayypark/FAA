@@ -27,7 +27,6 @@ import {
 import { condenseAnswer, condenseQuestion } from "@/lib/extraction/condense";
 import {
   isQuestionLike,
-  sharesSpecificTopicToken,
   STOPWORDS,
   topicOverlap,
 } from "@/lib/extraction/text-heuristics";
@@ -54,6 +53,16 @@ type RawQA = {
 const Q_MARKER = /^\s*(?:Q\d*\s*[.:)\]]|질문\s*\d*\s*[.:)]|문\s*[.:)])\s*/i;
 const A_MARKER = /^\s*(?:A\d*\s*[.:)\]]|답변?\s*\d*\s*[.:)]|답\s*[.:)])\s*/i;
 const SPEAKER_LINE = /^\s*([가-힣A-Za-z][가-힣A-Za-z0-9 .]{0,19}?)\s*[::]\s*/;
+/**
+ * Plaud also exports "Speaker 2 04:38 텍스트" — no brackets, no separator
+ * colon. Without this form the timestamp's own colon misparses as the speaker
+ * separator: the label becomes "Speaker 2 04", every turn gets a unique
+ * "speaker", pairing collapses, and the minutes digits leak into the text
+ * ("38 그럼 와서..."). Restricted to Speaker/화자 labels so a sentence like
+ * "오전 9:30 출고했습니다" is never mistaken for a speaker line.
+ */
+const SPEAKER_TIME_LINE =
+  /^\s*((?:Speaker|화자)\s*\d{1,2})\s+(\d{1,2}:\d{2}(?::\d{2})?)\s+(?=\S)/i;
 const TIMESTAMP = /[\[(](\d{1,2}:\d{2}(?::\d{2})?)[\])]/;
 const BULLET = /^\s*[-•*·▶▪]\s+/;
 const KEYED_NOTE = /^\s*([가-힣A-Za-z0-9 /]{2,24}?)\s*[::]\s*(.+)$/;
@@ -228,12 +237,21 @@ const ANAPHORIC_PROBE = /해당|방금|말씀하신/;
 function extractDialogueQA(file: UploadedInterviewFile, fileIndex: number): RawQA[] {
   const lines = splitLines(file.contentText);
 
-  type Turn = { speaker: string; text: string; start: number; end: number; lineIdx: number };
+  type Turn = {
+    speaker: string;
+    text: string;
+    start: number;
+    end: number;
+    lineIdx: number;
+    /** Turn timestamp from a "Speaker 2 04:38 ..." header line. */
+    timestamp?: string;
+  };
   const turns: Turn[] = [];
   let current: Turn | null = null;
 
   lines.forEach((line, idx) => {
-    const m = line.text.match(SPEAKER_LINE);
+    const tm = line.text.match(SPEAKER_TIME_LINE);
+    const m = tm ?? line.text.match(SPEAKER_LINE);
     if (m) {
       if (current) turns.push(current);
       const contentStart = line.start + m[0].length;
@@ -243,6 +261,7 @@ function extractDialogueQA(file: UploadedInterviewFile, fileIndex: number): RawQ
         start: contentStart,
         end: line.end,
         lineIdx: idx,
+        timestamp: tm ? tm[2] : undefined,
       };
     } else if (current && line.text.trim().length > 0) {
       current.text = `${current.text} ${line.text.trim()}`.trim();
@@ -336,14 +355,17 @@ function extractDialogueQA(file: UploadedInterviewFile, fileIndex: number): RawQ
       }
       const probe = stripTimestamps(cand.text).trim();
       const following = recovered[next + 1];
+      // Anaphora only: a short question referencing "the thing just said"
+      // digs into the ongoing answer. Topic-token overlap proved too weak a
+      // signal — interviews repeat the same nouns (실장님, 창고) across
+      // genuinely new questions, which must stay separate Q&A items.
       if (
         aTurns.length > 0 &&
         isQuestionLike(probe) &&
         probe.length <= PROBE_MAX_LENGTH &&
         following &&
         !interviewerSet.has(following.speaker) &&
-        (ANAPHORIC_PROBE.test(probe) ||
-          sharesSpecificTopicToken(probe, answerSegments.join(" ")))
+        ANAPHORIC_PROBE.test(probe)
       ) {
         answerSegments.push(`(진단팀: ${probe})`);
         answerEnd = cand.end;
@@ -356,8 +378,8 @@ function extractDialogueQA(file: UploadedInterviewFile, fileIndex: number): RawQ
     if (aTurns.length === 0) continue;
 
     const timestamp =
-      qTurns.map((x) => x.text.match(TIMESTAMP)?.[1]).find(Boolean) ??
-      aTurns.map((x) => x.text.match(TIMESTAMP)?.[1]).find(Boolean);
+      qTurns.map((x) => x.timestamp ?? x.text.match(TIMESTAMP)?.[1]).find(Boolean) ??
+      aTurns.map((x) => x.timestamp ?? x.text.match(TIMESTAMP)?.[1]).find(Boolean);
     const question = cleanQuestion(stripTimestamps(qTurns.map((x) => x.text).join(" ")));
     const answer = answerSegments.join(" ").trim();
     if (!question || !answer) continue;
