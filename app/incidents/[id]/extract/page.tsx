@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExtractionStepper } from "@/components/extraction/extraction-stepper";
 import {
+  INTAKE_GROUP,
   UploadStep,
   type IntervieweeGroup,
   type ParsingFile,
@@ -106,9 +107,7 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
   const addInterviewSession = useFAAStore((s) => s.addInterviewSession);
 
   const [step, setStep] = useState<FlowStep>("upload");
-  const [groups, setGroups] = useState<IntervieweeGroup[]>(() => [
-    { id: newId(), name: "", files: [] },
-  ]);
+  const [groups, setGroups] = useState<IntervieweeGroup[]>([]);
   const [parsingFiles, setParsingFiles] = useState<ParsingFile[]>([]);
   const [importantOnly, setImportantOnly] = useState(false);
   const [stage, setStage] = useState<ExtractionStage>(PIPELINE_STAGES[0]);
@@ -151,13 +150,50 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
     );
   }
 
-  function handleAddFiles(groupId: string, selected: File[]) {
+  /** Leading name token, honorifics/titles stripped, for same-person matching. */
+  function nameToken(name: string): string {
+    const m = name.trim().match(/^[가-힣A-Za-z]+/);
+    return (m?.[0] ?? name.trim()).toLowerCase();
+  }
+
+  /** "양충모 팀장님" and "충모 팀장님" should land in the same group. */
+  function sameInterviewee(a: string, b: string): boolean {
+    const ta = nameToken(a);
+    const tb = nameToken(b);
+    if (ta.length < 2 || tb.length < 2) return false;
+    return ta === tb || ta.includes(tb) || tb.includes(ta);
+  }
+
+  /** Intake: detect the person from the file and find or create their group. */
+  function assignToDetectedGroup(file: UploadedInterviewFile) {
+    const suggested = suggestGroupName(file);
+    setGroups((prev) => {
+      const target = prev.find(
+        (g) => g.name.trim() && sameInterviewee(g.name, suggested)
+      );
+      if (target) {
+        return prev.map((g) =>
+          g.id === target.id ? { ...g, files: [...g.files, file] } : g
+        );
+      }
+      return [...prev, { id: newId(), name: suggested, files: [file] }];
+    });
+  }
+
+  function parseFilesInto(
+    selected: File[],
+    parsingGroupId: string,
+    assign: (file: UploadedInterviewFile) => void
+  ) {
     selected.forEach((file) => {
       const key = newId();
-      setParsingFiles((prev) => [...prev, { key, fileName: file.name, groupId }]);
+      setParsingFiles((prev) => [
+        ...prev,
+        { key, fileName: file.name, groupId: parsingGroupId },
+      ]);
       parseUploadedFile(file)
         .then((contentText) => {
-          appendFileToGroup(groupId, {
+          assign({
             id: newId(),
             fileName: file.name,
             fileType: fileExtension(file.name),
@@ -178,7 +214,19 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
     });
   }
 
-  async function handleAddLink(groupId: string, url: string) {
+  function handleAddFiles(groupId: string, selected: File[]) {
+    parseFilesInto(selected, groupId, (file) => appendFileToGroup(groupId, file));
+  }
+
+  function handleIntakeFiles(selected: File[]) {
+    parseFilesInto(selected, INTAKE_GROUP, assignToDetectedGroup);
+  }
+
+  async function importLinkInto(
+    url: string,
+    parsingGroupId: string,
+    assign: (file: UploadedInterviewFile) => void
+  ) {
     let hostname: string;
     try {
       const parsed = new URL(url);
@@ -189,7 +237,10 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
       return;
     }
     const key = newId();
-    setParsingFiles((prev) => [...prev, { key, fileName: hostname, groupId }]);
+    setParsingFiles((prev) => [
+      ...prev,
+      { key, fileName: hostname, groupId: parsingGroupId },
+    ]);
     try {
       const res = await fetch("/api/import-link", {
         method: "POST",
@@ -213,7 +264,7 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
           contentText = lines.join("\n");
         }
       }
-      appendFileToGroup(groupId, {
+      assign({
         id: newId(),
         fileName: data.fileName,
         fileType: "link",
@@ -226,6 +277,14 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
     } finally {
       setParsingFiles((prev) => prev.filter((p) => p.key !== key));
     }
+  }
+
+  async function handleAddLink(groupId: string, url: string) {
+    await importLinkInto(url, groupId, (file) => appendFileToGroup(groupId, file));
+  }
+
+  async function handleIntakeLink(url: string) {
+    await importLinkInto(url, INTAKE_GROUP, assignToDetectedGroup);
   }
 
   function handleSourceTypeChange(
@@ -407,6 +466,8 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
           <UploadStep
             groups={groups}
             parsingFiles={parsingFiles}
+            onIntakeFiles={handleIntakeFiles}
+            onIntakeLink={handleIntakeLink}
             onAddFiles={handleAddFiles}
             onAddLink={handleAddLink}
             onNameChange={handleNameChange}

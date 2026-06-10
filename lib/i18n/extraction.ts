@@ -76,8 +76,12 @@ export const EXTRACTION = {
   "extraction.upload.linkAdded": { en: "Link imported.", ko: "링크를 가져왔습니다." },
   "extraction.upload.group.heading": { en: "Interviewees", ko: "면담자" },
   "extraction.upload.group.description": {
-    en: "Group each interviewee's transcripts and notes together. Each interviewee becomes a separate interview session.",
-    ko: "면담자별로 녹취록과 메모를 묶어 주십시오. 면담자마다 별도의 인터뷰 세션이 생성됩니다.",
+    en: "Files are grouped by detected interviewee. Edit names, add more files under each person, or move a misfiled item by removing and re-adding it. Each interviewee becomes a separate session.",
+    ko: "감지된 면담자별로 파일이 자동 분류됩니다. 이름을 수정하거나 각 면담자 아래에 파일을 추가할 수 있고, 잘못 분류된 파일은 제거 후 해당 카드에 다시 추가하면 됩니다. 면담자마다 별도의 세션이 생성됩니다.",
+  },
+  "extraction.upload.group.autoHint": {
+    en: "Interviewees are created automatically from detected names.",
+    ko: "이름을 감지하여 면담자 카드가 자동으로 생성됩니다.",
   },
   "extraction.upload.group.namePlaceholder": { en: "Interviewee name", ko: "면담자 이름" },
   "extraction.upload.group.nameAria": {

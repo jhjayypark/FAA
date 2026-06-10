@@ -36,6 +36,9 @@ export type IntervieweeGroup = {
   files: UploadedInterviewFile[];
 };
 
+/** Group id used while an intake upload has not been assigned to a person yet. */
+export const INTAKE_GROUP = "__intake__";
+
 /** A file currently being parsed, shown as a skeleton row in its group. */
 export type ParsingFile = { key: string; fileName: string; groupId: string };
 
@@ -60,6 +63,9 @@ const SOURCE_TYPE_OPTIONS: { value: UploadedFileSourceType; labelKey: string }[]
 type UploadStepProps = {
   groups: IntervieweeGroup[];
   parsingFiles: ParsingFile[];
+  /** Intake handlers: name detection assigns or creates the person group. */
+  onIntakeFiles: (files: File[]) => void;
+  onIntakeLink: (url: string) => Promise<void>;
   onAddFiles: (groupId: string, files: File[]) => void;
   onAddLink: (groupId: string, url: string) => Promise<void>;
   onNameChange: (groupId: string, name: string) => void;
@@ -303,6 +309,8 @@ function GroupCard({
 export function UploadStep({
   groups,
   parsingFiles,
+  onIntakeFiles,
+  onIntakeLink,
   onAddFiles,
   onAddLink,
   onNameChange,
@@ -313,17 +321,138 @@ export function UploadStep({
   onContinue,
 }: UploadStepProps) {
   const t = useT();
+  const intakeInputRef = useRef<HTMLInputElement>(null);
+  const [intakeDrag, setIntakeDrag] = useState(false);
+  const [intakeUrl, setIntakeUrl] = useState("");
+  const [importingIntake, setImportingIntake] = useState(false);
+
   const totalFiles = groups.reduce((n, g) => n + g.files.length, 0);
   const continueDisabled = totalFiles === 0 || parsingFiles.length > 0;
+  const intakeParsing = parsingFiles.filter((p) => p.groupId === INTAKE_GROUP);
+
+  async function submitIntakeLink() {
+    const url = intakeUrl.trim();
+    if (!url || importingIntake) return;
+    setImportingIntake(true);
+    try {
+      await onIntakeLink(url);
+      setIntakeUrl("");
+    } finally {
+      setImportingIntake(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h2 className="text-sm font-semibold">{t("extraction.upload.group.heading")}</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t("extraction.upload.group.description")}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={t("extraction.upload.dropzoneAria")}
+        onClick={() => intakeInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            intakeInputRef.current?.click();
+          }
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIntakeDrag(true);
+        }}
+        onDragLeave={() => setIntakeDrag(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIntakeDrag(false);
+          const dropped = Array.from(e.dataTransfer.files);
+          if (dropped.length > 0) onIntakeFiles(dropped);
+        }}
+        className={cn(
+          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-6 py-10 text-center transition-colors duration-150",
+          intakeDrag
+            ? "border-primary bg-muted/60"
+            : "border-border hover:border-primary/40 hover:bg-muted/40"
+        )}
+      >
+        <HugeiconsIcon
+          icon={CloudUploadIcon}
+          size={28}
+          strokeWidth={1.5}
+          className="text-muted-foreground"
+        />
+        <p className="text-sm font-medium text-foreground">
+          {t("extraction.upload.dropTitle")}
+        </p>
+        <p className="text-xs text-muted-foreground">{t("extraction.upload.formats")}</p>
+        <p className="text-xs text-muted-foreground">
+          {t("extraction.upload.group.autoHint")}
         </p>
       </div>
+      <input
+        ref={intakeInputRef}
+        type="file"
+        multiple
+        accept={ACCEPTED_FILE_TYPES}
+        className="hidden"
+        onChange={(e) => {
+          const selected = Array.from(e.target.files ?? []);
+          if (selected.length > 0) onIntakeFiles(selected);
+          e.target.value = "";
+        }}
+      />
+
+      <div className="flex gap-2">
+        <Input
+          type="url"
+          inputMode="url"
+          value={intakeUrl}
+          onChange={(e) => setIntakeUrl(e.target.value)}
+          placeholder={t("extraction.upload.linkPlaceholder")}
+          aria-label={t("extraction.upload.linkLabel")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              void submitIntakeLink();
+            }
+          }}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          className="shrink-0"
+          disabled={intakeUrl.trim().length === 0 || importingIntake}
+          onClick={() => void submitIntakeLink()}
+        >
+          <HugeiconsIcon icon={Link01Icon} size={14} strokeWidth={1.8} />
+          {t("extraction.upload.linkAdd")}
+        </Button>
+      </div>
+
+      {intakeParsing.length > 0 && (
+        <ul className="divide-y divide-border rounded-lg border border-border">
+          {intakeParsing.map((p) => (
+            <li key={p.key} className="flex items-center gap-3 px-4 py-2.5">
+              <Skeleton className="size-8 shrink-0 rounded-md" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-muted-foreground">
+                  {p.fileName}
+                </p>
+                <Skeleton className="mt-1.5 h-3 w-24" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {groups.length > 0 && (
+        <div className="mt-2">
+          <h2 className="text-sm font-semibold">
+            {t("extraction.upload.group.heading")}
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("extraction.upload.group.description")}
+          </p>
+        </div>
+      )}
 
       {groups.map((group, index) => (
         <GroupCard
