@@ -52,7 +52,7 @@ export const FNS_LOCATIONS: FNSLocation[] = [
   {
     id: "romeoville-il",
     name: "FNS - Romeoville, IL",
-    address: "5 Greenwood, Romeoville, IL 60446, US",
+    address: "7 Greenwood Ave, Romeoville, IL 60446, US",
     city: "Romeoville",
     state: "IL",
     type: "Warehouse",
