@@ -24,6 +24,7 @@ import {
   detectIntervieweeName,
   INTERVIEWER_LABELS,
 } from "@/lib/extraction/detect-interviewee";
+import { condenseAnswer, condenseQuestion } from "@/lib/extraction/condense";
 
 type Line = { text: string; start: number; end: number };
 
@@ -44,7 +45,7 @@ const BULLET = /^\s*[-•*·▶▪]\s+/;
 const KEYED_NOTE = /^\s*([가-힣A-Za-z0-9 /]{2,24}?)\s*[::]\s*(.+)$/;
 
 /** Red-flag terms: responsibility, policy violation, concealment, access abuse. */
-const HIGH_KEYWORDS = [
+export const HIGH_KEYWORDS = [
   "횡령", "유용", "착복", "절도", "도난", "분실", "손실", "누락", "폐기",
   "위조", "허위", "조작", "은폐", "무단", "승인 없이", "승인없이", "미승인",
   "결재 없이", "결재없이", "위반", "책임", "지시", "압력", "뇌물", "리베이트",
@@ -54,7 +55,7 @@ const HIGH_KEYWORDS = [
 ];
 
 /** Operational context terms: relevant but not red flags on their own. */
-const MEDIUM_KEYWORDS = [
+export const MEDIUM_KEYWORDS = [
   "절차", "프로세스", "규정", "매뉴얼", "보고", "승인", "결재", "확인", "점검",
   "인수인계", "교육", "시스템", "권한", "담당", "기록", "문서", "월말", "마감",
   "감사", "창고", "출고", "입고", "배송", "운송", "재고", "차이", "불일치",
@@ -455,11 +456,14 @@ export function runMockExtraction(args: {
 
   const ctx = contextTokens(incident, overviewEntries);
 
+  // Importance scoring, dedup and filtering above all ran on the FULL text so
+  // keyword detection stays intact; only the displayed Q&A is condensed here.
+  // Citations keep quoting the original transcript with exact offsets.
   let qaItems: ExtractedQAItem[] = merged.map((qa) => {
     const { importance, reason, contextMatched } = scoreImportance(qa, ctx);
     return {
-      question: qa.question,
-      answer: qa.answer,
+      question: condenseQuestion(qa.question),
+      answer: condenseAnswer(qa.answer),
       importance,
       importanceReason: reason,
       includedInReport: importance !== "Low",

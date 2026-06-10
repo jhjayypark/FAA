@@ -33,17 +33,42 @@ TASK:
 Given the incident context, involved locations, overview notes, transcript files, and manual notes, extract interview Q&A pairs.
 
 QUESTION NORMALIZATION:
-- Convert interviewer prompts into concise Korean questions.
-- Always start each question semantically as a question, but do not invent a new meaning.
-- If the original question is fragmented, clean it only enough to be readable.
+- Rewrite each interviewer prompt as ONE concise, formal Korean sentence in 합쇼체 ("~습니까?", "~에 대해 설명 부탁드립니다").
+- Drop greetings, fillers, repetition, and meta-talk; keep only the core question.
+- If the interviewer rambles through multiple variants of the same question, collapse them into the single core question. An either/or question ("A입니까, 아니면 B입니까?") is acceptable.
+- If the original question is fragmented, normalize it into a complete question without inventing a new meaning.
 - Do not add new facts.
 
 ANSWER EXTRACTION:
 - Answers must be factual.
-- Do not summarize beyond what the interviewee actually said.
+- CONDENSE each answer to only the essential facts: strongly prefer 1 line; hard maximum 2-3 lines (about 150 Korean characters).
+- Use formal endings ("~했습니다", "~입니다"). Strip fillers, repetition, and tangents.
+- Condensing is rephrasing and selecting, never inventing: you may rephrase and shorten what the interviewee said, but every fact in the answer must be present in the source. Do not add any fact not in the source.
+- ALWAYS preserve concrete facts: 이름, 날짜, 금액, 회사/법인명, 수량.
+- Preserve meaning-bearing hedges and refusals ("잘 모르겠습니다", "~인 것 같습니다", 답변 거부 등) — do not strip them.
+- Do not prefix answers with the speaker's name; the app already shows the interviewee per session.
+- Condensing applies to question/answer text only — sourceCitations quotes must remain verbatim excerpts from the source.
 - If the answer is unclear, write "모름" or exclude it.
 - If transcript and notes conflict, mention the conflict and cite both.
 - If the source shows an interview timestamp such as (10:05) next to an exchange, copy it verbatim into timestampLabel; otherwise use null.
+
+STYLE EXAMPLES (style references only — they define TONE and LENGTH, not content; never copy their facts into output):
+
+Transformation example (verbose transcript → target style):
+원문 질문: "네 다이렉트로 얘기하세요? 아니면 최종호 팀장님이 그 대신 이렇게 얘기해 주시는 그런 형태예요? 최종호 팀장을 통해서 얘기를 하는지 아니면 그냥 이행란 실장님이랑 다이렉트로 소통하시는지?"
+→ Q: "보고는 최종호 팀장을 통해 하십니까, 아니면 실장님과 직접 소통하십니까?"
+원문 답변: "그거는 그때그때 다른 것 같아요 보고를 해야 되고 보고 체계가 올라가는 건 최종호 팀장님이 통해서 얘기를 하고요 그거 외에 이제 실장님이 별도로 물어보거나, 실장님만 관여되어 있는 거는 실장님한테 직접 얘기하기도 하죠 복합적이네요"
+→ A: "사안에 따라 다릅니다. 보고 체계상 보고는 최종호 팀장을 통해 하고, 실장님만 관여된 사안은 실장님께 직접 얘기합니다."
+
+Target-style Q&A pairs:
+Q: "운송사 설립/운영에 대해서 MGNT에 보고한 적이 있습니까?"
+A: "규모가 작고 단순 운영 구조라 별도로 보고하지 않았습니다."
+
+Q: "차량 소유 및 운영 구조는 어떻게 됩니까?"
+A: "초기에 자가 차량 2대로 시작하였고 이후 최대 8대까지 투입하였습니다. 차량은 모두 본인 소유이며 Fleet Owner와 Driver가 수익을 50:50으로 배분하는 구조입니다."
+
+Q: "United 쪽으로 배차하라는 지시나 요청 받은 적 있으십니까?"
+A: "없습니다. 전혀 그런 일 없었습니다."
 
 IMPORTANCE:
 Assign importance:
