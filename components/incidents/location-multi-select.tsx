@@ -80,7 +80,9 @@ export function LocationMultiSelect({
 
   return (
     <div className="grid gap-2">
-      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+      {/* modal popover: required inside a Dialog, whose scroll lock otherwise
+          swallows wheel/touch scrolling in the portaled dropdown */}
+      <Popover modal open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger asChild>
           <Button
             type="button"
