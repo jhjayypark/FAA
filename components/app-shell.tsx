@@ -15,23 +15,12 @@ import { useLanguage, useT } from "@/lib/i18n";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { SettingsDialog } from "@/components/settings-dialog";
+import { PenguinAvatar } from "@/components/penguin-avatar";
 
 const NAV_ITEMS = [
   { href: "/assistant", labelKey: "common.nav.assistant", icon: BubbleChatIcon },
   { href: "/incidents", labelKey: "common.nav.incidents", icon: FolderDetailsIcon },
 ];
-
-function initialsOf(name: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) return "?";
-  // Korean names render best with the family-name character alone.
-  if (/^[가-힣]/.test(trimmed)) return trimmed[0];
-  const parts = trimmed.split(/\s+/);
-  return parts
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join("");
-}
 
 function FAAWordmark() {
   const t = useT();
@@ -95,9 +84,7 @@ function ProfileSection({ onOpenSettings }: { onOpenSettings: () => void }) {
       aria-label={t("common.profile.open")}
       className="flex w-full items-center gap-2.5 border-t border-sidebar-border px-4 py-3 text-left transition-colors hover:bg-sidebar-accent"
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[12px] font-semibold text-primary">
-        {initialsOf(displayName)}
-      </span>
+      <PenguinAvatar className="size-8 shrink-0" />
       <span className="min-w-0 leading-tight">
         <span className="block truncate text-[13px] font-medium text-foreground">
           {displayName || "..."}
