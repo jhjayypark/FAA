@@ -38,7 +38,7 @@ type RawQA = {
 
 const Q_MARKER = /^\s*(?:Q\d*\s*[.:)\]]|질문\s*\d*\s*[.:)]|문\s*[.:)])\s*/i;
 const A_MARKER = /^\s*(?:A\d*\s*[.:)\]]|답변?\s*\d*\s*[.:)]|답\s*[.:)])\s*/i;
-const SPEAKER_LINE = /^\s*([가-힣A-Za-z][가-힣A-Za-z .]{0,19}?)\s*[::]\s*/;
+const SPEAKER_LINE = /^\s*([가-힣A-Za-z][가-힣A-Za-z0-9 .]{0,19}?)\s*[::]\s*/;
 const TIMESTAMP = /[\[(](\d{1,2}:\d{2}(?::\d{2})?)[\])]/;
 const BULLET = /^\s*[-•*·▶▪]\s+/;
 const KEYED_NOTE = /^\s*([가-힣A-Za-z0-9 /]{2,24}?)\s*[::]\s*(.+)$/;

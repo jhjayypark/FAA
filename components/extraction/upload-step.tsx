@@ -7,6 +7,7 @@ import {
   CloudUploadIcon,
   Doc01Icon,
   File01Icon,
+  Link01Icon,
   Pdf01Icon,
   Txt01Icon,
 } from "@hugeicons/core-free-icons";
@@ -16,6 +17,8 @@ import { charCount } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -33,6 +36,7 @@ const FILE_ICONS: Record<string, typeof File01Icon> = {
   md: Txt01Icon,
   docx: Doc01Icon,
   pdf: Pdf01Icon,
+  link: Link01Icon,
 };
 
 function iconForExtension(ext: string) {
@@ -49,6 +53,7 @@ type UploadStepProps = {
   files: UploadedInterviewFile[];
   parsingFiles: ParsingFile[];
   onAddFiles: (files: File[]) => void;
+  onAddLink: (url: string) => Promise<void>;
   onSourceTypeChange: (fileId: string, sourceType: UploadedFileSourceType) => void;
   onRemoveFile: (fileId: string) => void;
   onContinue: () => void;
@@ -58,6 +63,7 @@ export function UploadStep({
   files,
   parsingFiles,
   onAddFiles,
+  onAddLink,
   onSourceTypeChange,
   onRemoveFile,
   onContinue,
@@ -65,9 +71,23 @@ export function UploadStep({
   const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [importingLink, setImportingLink] = useState(false);
 
   const hasRows = files.length > 0 || parsingFiles.length > 0;
   const continueDisabled = files.length === 0 || parsingFiles.length > 0;
+
+  async function submitLink() {
+    const url = linkUrl.trim();
+    if (!url || importingLink) return;
+    setImportingLink(true);
+    try {
+      await onAddLink(url);
+      setLinkUrl("");
+    } finally {
+      setImportingLink(false);
+    }
+  }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -130,6 +150,38 @@ export function UploadStep({
       <p className="text-xs text-muted-foreground">
         {t("extraction.upload.audioNote")}
       </p>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="link-import">{t("extraction.upload.linkLabel")}</Label>
+        <div className="flex gap-2">
+          <Input
+            id="link-import"
+            type="url"
+            inputMode="url"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            placeholder={t("extraction.upload.linkPlaceholder")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                void submitLink();
+              }
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={linkUrl.trim().length === 0 || importingLink}
+            onClick={() => void submitLink()}
+          >
+            <HugeiconsIcon icon={Link01Icon} size={14} strokeWidth={1.8} />
+            {t("extraction.upload.linkAdd")}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t("extraction.upload.linkHelp")}
+        </p>
+      </div>
 
       {hasRows && (
         <ul className="divide-y divide-border rounded-lg border border-border">

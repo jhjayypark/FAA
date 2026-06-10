@@ -59,6 +59,21 @@ export const EXTRACTION = {
     en: "Audio and video transcription is coming soon.",
     ko: "오디오 및 비디오 전사 기능은 준비 중입니다.",
   },
+  "extraction.upload.linkLabel": { en: "Attach from link", ko: "링크로 첨부" },
+  "extraction.upload.linkPlaceholder": {
+    en: "Paste a public link, e.g. a Plaud share link",
+    ko: "공개 링크를 붙여넣으십시오 (예: Plaud 공유 링크)",
+  },
+  "extraction.upload.linkAdd": { en: "Add link", ko: "링크 추가" },
+  "extraction.upload.linkHelp": {
+    en: "Plaud share links import the full transcript with speakers and timestamps. Other public pages import as plain text.",
+    ko: "Plaud 공유 링크는 화자와 타임스탬프가 포함된 전체 녹취록을 가져옵니다. 그 외 공개 페이지는 일반 텍스트로 가져옵니다.",
+  },
+  "extraction.upload.linkInvalid": {
+    en: "Enter a valid http(s) link.",
+    ko: "올바른 http(s) 링크를 입력하십시오.",
+  },
+  "extraction.upload.linkAdded": { en: "Link imported.", ko: "링크를 가져왔습니다." },
   "extraction.upload.sourceType.transcript": {
     en: "Transcript",
     ko: "녹취록",

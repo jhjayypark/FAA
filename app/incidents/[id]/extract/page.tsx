@@ -148,6 +148,46 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
     });
   }
 
+  async function handleAddLink(url: string) {
+    let hostname: string;
+    try {
+      const parsed = new URL(url);
+      if (!/^https?:$/.test(parsed.protocol)) throw new Error();
+      hostname = parsed.hostname;
+    } catch {
+      toast.error(t("extraction.upload.linkInvalid"));
+      return;
+    }
+    const key = newId();
+    setParsingFiles((prev) => [...prev, { key, fileName: hostname }]);
+    try {
+      const res = await fetch("/api/import-link", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "Import failed.");
+      }
+      setFiles((prev) => [
+        ...prev,
+        {
+          id: newId(),
+          fileName: data.fileName,
+          fileType: "link",
+          contentText: data.contentText,
+          sourceType: data.sourceType === "transcript" ? "transcript" : "unknown",
+        },
+      ]);
+      toast.success(t("extraction.upload.linkAdded"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("extraction.upload.linkInvalid"));
+    } finally {
+      setParsingFiles((prev) => prev.filter((p) => p.key !== key));
+    }
+  }
+
   function handleSourceTypeChange(fileId: string, sourceType: UploadedFileSourceType) {
     setFiles((prev) =>
       prev.map((f) => (f.id === fileId ? { ...f, sourceType } : f))
@@ -256,6 +296,7 @@ export default function ExtractPage({ params }: { params: Promise<{ id: string }
             files={files}
             parsingFiles={parsingFiles}
             onAddFiles={handleAddFiles}
+            onAddLink={handleAddLink}
             onSourceTypeChange={handleSourceTypeChange}
             onRemoveFile={handleRemoveFile}
             onContinue={() => setStep("rules")}

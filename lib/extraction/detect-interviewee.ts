@@ -33,7 +33,7 @@ const DOC_WORDS = new Set([
   "내용", "요약", "초안", "최종",
 ]);
 
-const SPEAKER_LINE = /^\s*([가-힣A-Za-z][가-힣A-Za-z .]{0,19}?)\s*[::]/;
+const SPEAKER_LINE = /^\s*([가-힣A-Za-z][가-힣A-Za-z0-9 .]{0,19}?)\s*[::]/;
 
 const HEADER_NAME_PATTERNS = [
   /(?:면담\s*대상자?|인터뷰\s*대상자?|피면담자|대상자|성명|이름)\s*[::]\s*([가-힣]{2,4})/,
