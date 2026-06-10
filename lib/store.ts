@@ -29,8 +29,11 @@ export type AppSettings = {
 
 const DEFAULT_SETTINGS: AppSettings = {
   language: "en",
-  displayName: "Jay Park",
+  displayName: "Jieun Yu",
 };
+
+/** Earlier builds shipped this placeholder; treat it as never user-chosen. */
+const LEGACY_DEFAULT_NAME = "Jay Park";
 
 type FAAState = {
   incidents: Incident[];
@@ -280,11 +283,11 @@ export const useFAAStore = create<FAAState>()(
       // Older persisted states predate `settings`; backfill missing fields.
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<FAAState>;
-        return {
-          ...current,
-          ...p,
-          settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) },
-        };
+        const settings = { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) };
+        if (settings.displayName === LEGACY_DEFAULT_NAME) {
+          settings.displayName = DEFAULT_SETTINGS.displayName;
+        }
+        return { ...current, ...p, settings };
       },
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

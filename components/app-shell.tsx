@@ -93,7 +93,7 @@ function ProfileSection({ onOpenSettings }: { onOpenSettings: () => void }) {
       type="button"
       onClick={onOpenSettings}
       aria-label={t("common.profile.open")}
-      className="mx-2 mb-3 flex items-center gap-2.5 rounded-md border border-transparent px-2 py-2 text-left transition-colors hover:bg-sidebar-accent/70"
+      className="flex w-full items-center gap-2.5 border-t border-sidebar-border px-4 py-3 text-left transition-colors hover:bg-sidebar-accent"
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[12px] font-semibold text-primary">
         {initialsOf(displayName)}
