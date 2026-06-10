@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FAA - FNS Audit Assistant
 
-## Getting Started
+Internal audit workspace for FNS, Inc. An internal auditor manages incidents
+across FNS locations in the United States, uploads Korean interview transcripts
+and manual notes, extracts cited Q&A findings with strict anti-hallucination
+rules, and generates PPTX report drafts.
 
-First, run the development server:
+The interface is English; all AI-generated interview output (questions,
+answers, importance reasons, assistant replies) is Korean.
+
+## Run
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Data persists in the browser via localStorage
+(no backend in this MVP).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Try it quickly
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Sample Korean interview materials live in `public/samples/`:
 
-## Learn More
+- `김민수_인터뷰_녹취록.txt` - speaker-labeled transcript
+- `수기노트_김민수_면담.md` - shorthand manual notes
 
-To learn more about Next.js, take a look at the following resources:
+Create an incident (for example "Moonachie 창고 5월 재고 불일치"), open the
+Interview tab, choose Start Extraction, and upload one or both files.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Architecture notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `lib/types.ts` - domain model (incidents, sessions, Q&A items, citations)
+- `lib/store.ts` - Zustand store persisted to localStorage
+- `lib/extraction/` - extraction pipeline. `extract.ts` is the provider-ready
+  entry point; `mock-extractor.ts` is the current heuristic engine that parses
+  Q/A markers, speaker dialogue, and note bullets with exact character offsets
+  so every citation highlights its true source span.
+- `lib/prompts.ts` - the strict extraction and assistant system prompts used
+  when a real LLM provider is connected.
+- `lib/assistant/` - incident-scoped assistant (mock, LLM-ready).
+- `lib/report/` - PPTX generation via pptxgenjs.
+- `docs/AGENT_GUIDE.md` - internal design-system and module contracts.
 
-## Deploy on Vercel
+To connect a real LLM later, implement `runLLMExtraction` in
+`lib/extraction/extract.ts` and the provider call in `lib/assistant/answer.ts`;
+prompts and JSON shapes are already in place.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Tests
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx tsx scripts/test-extract.ts   # extraction engine smoke test with offset checks
+```

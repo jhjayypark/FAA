@@ -1,0 +1,57 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e7]: FAA
+        - generic [ref=e8]:
+          - generic [ref=e9]: FNS Audit Assistant
+          - generic [ref=e10]: Internal Audit, FNS Inc.
+      - navigation [ref=e11]:
+        - link "Assistant" [ref=e12] [cursor=pointer]:
+          - /url: /assistant
+          - img [ref=e13]
+          - text: Assistant
+        - link "Incidents" [ref=e16] [cursor=pointer]:
+          - /url: /incidents
+          - img [ref=e17]
+          - text: Incidents
+      - paragraph [ref=e21]: "Audit materials stay in this browser. Confidential: internal use only."
+    - main [ref=e23]:
+      - generic [ref=e310]:
+        - generic [ref=e311]:
+          - generic [ref=e419]:
+            - img [ref=e420]
+            - generic [ref=e422]: Moonachie 창고 5월 재고 불일치
+          - heading "Extract Interview Insights" [level=1] [ref=e316]
+          - paragraph [ref=e317]: Upload interview material, confirm extraction rules, and generate cited Q&A findings.
+        - list "Extraction steps" [ref=e319]:
+          - listitem [ref=e320]:
+            - generic [ref=e321]:
+              - img [ref=e368]
+              - generic [ref=e323]: Upload Files
+          - listitem [ref=e324]:
+            - generic [ref=e326]:
+              - img [ref=e423]
+              - generic [ref=e328]: Extraction Rules
+          - listitem [ref=e329]:
+            - generic [ref=e331]:
+              - generic [ref=e332]: "3"
+              - generic [ref=e333]: Extract
+        - generic [ref=e425]:
+          - generic [ref=e426]:
+            - generic [ref=e427]: Extracting insights
+            - generic [ref=e428]: Q&A pairs are being extracted from the uploaded files. Keep this page open.
+          - generic [ref=e429]:
+            - generic [ref=e431]:
+              - generic [ref=e432]: Identifying interview structure
+              - generic [ref=e433]: 20%
+            - list [ref=e436]:
+              - listitem [ref=e437]:
+                - img [ref=e438]
+                - text: Parsing source files
+              - listitem [ref=e440]: Identifying interview structure
+              - listitem [ref=e443]: Extracting Q&A pairs
+              - listitem [ref=e446]: Scoring importance
+              - listitem [ref=e449]: Attaching source citations
+  - region "Notifications alt+T"
+  - alert [ref=e37]: FAA | FNS Audit Assistant

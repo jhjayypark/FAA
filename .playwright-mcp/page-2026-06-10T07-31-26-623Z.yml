@@ -1,0 +1,64 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - generic:
+            - generic: FAA
+          - generic:
+            - generic: FNS Audit Assistant
+            - generic: Internal Audit, FNS Inc.
+      - navigation:
+        - link:
+          - /url: /assistant
+          - img
+          - text: Assistant
+        - link:
+          - /url: /incidents
+          - img
+          - text: Incidents
+      - generic:
+        - paragraph: "Audit materials stay in this browser. Confidential: internal use only."
+    - generic:
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: Incidents
+              - paragraph: Manage audit incidents, interviews, and findings.
+            - button:
+              - img
+              - text: Add Incident
+          - generic:
+            - img
+            - heading [level=2]: No incidents yet
+            - paragraph: Create an incident to start organizing interviews, evidence, and audit findings.
+            - button:
+              - img
+              - text: Add Incident
+  - region "Notifications alt+T"
+  - alert
+  - dialog "Add Incident" [ref=e39]:
+    - generic [ref=e40]:
+      - heading "Add Incident" [level=2] [ref=e41]
+      - paragraph [ref=e42]: Create an incident to organize interviews, evidence, and findings.
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]: Incident Name
+        - textbox "Incident Name" [active] [ref=e46]:
+          - /placeholder: "Example: Inventory discrepancy, Carson warehouse"
+      - generic [ref=e47]:
+        - generic [ref=e48]: Incident Context
+        - textbox "Incident Context" [ref=e49]:
+          - /placeholder: Describe what happened, why this audit is being opened, known background, relevant teams, timeline, or concerns.
+      - generic [ref=e50]:
+        - generic [ref=e51]: Involved FNS Locations
+        - combobox [ref=e53]:
+          - generic [ref=e54]: Select locations
+          - img
+      - generic [ref=e55]:
+        - button "Cancel" [ref=e56]
+        - button "Create Incident" [ref=e57]
+    - button "Close" [ref=e58]:
+      - img
+      - generic [ref=e59]: Close

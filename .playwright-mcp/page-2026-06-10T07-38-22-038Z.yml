@@ -1,0 +1,877 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - generic:
+            - generic: FAA
+          - generic:
+            - generic: FNS Audit Assistant
+            - generic: Internal Audit, FNS Inc.
+      - navigation:
+        - link:
+          - /url: /assistant
+          - img
+          - text: Assistant
+        - link:
+          - /url: /incidents
+          - img
+          - text: Incidents
+      - generic:
+        - paragraph: "Audit materials stay in this browser. Confidential: internal use only."
+    - generic:
+      - main:
+        - generic:
+          - generic:
+            - link:
+              - /url: /incidents/e9bb6d47-5287-45ab-a748-cc629260f59b?tab=interview
+              - img
+              - text: Back to incident
+            - paragraph: Interview session
+            - generic:
+              - heading [level=1]: 김민수
+              - button:
+                - img
+            - paragraph: Extracted Jun 10, 2026, 12:35 AM · 2 source files · 20 findings
+          - generic:
+            - generic:
+              - generic:
+                - combobox:
+                  - generic: Time order
+                  - img
+                - generic:
+                  - checkbox
+                  - generic: Show important list only
+                - generic:
+                  - generic: 19 of 20 in report
+                  - generic:
+                    - button [disabled]: Export PDF
+                  - button:
+                    - img
+                    - text: Generate PPTX
+            - generic:
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: Low
+                  - generic: Edited
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 안녕하세요. 오늘 인터뷰는 5월 재고 불일치 건 관련입니다. 먼저 본인 업무를 간단히 설명해 주시겠어요?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 네, 저는 Moonachie 창고에서 입출고 관리와 재고 실사를 총괄하고 있습니다. 2022년부터 운영팀장을 맡았습니다.
+                - paragraph: Reason 핵심 키워드(창고, 출고, 재고) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic: 10:05
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 5월 말 재고 실사에서 전산 수량과 실물 수량 차이가 얼마나 발생했습니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 전산상으로는 1,240박스인데 실물은 1,168박스였습니다. 72박스 차이가 났고, 금액으로는 약 43,000달러 정도입니다.
+                - paragraph: Reason 핵심 키워드(차이, 전산, 박스) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 차이를 처음 인지한 시점은 언제입니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 5월 29일 마감 실사 때 처음 확인했습니다. 그 전 주 주간 점검에서는 차이가 없었습니다.
+                - paragraph: Reason 핵심 키워드(확인, 점검, 마감) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: Medium
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 출고 기록은 누가 입력합니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 보통은 출고 담당자가 입력하는데, 5월에는 인원이 부족해서 야간 시프트에서는 박지현 매니저가 대신 입력한 경우가 있었습니다.
+                - paragraph: Reason 사건 이해에 필요한 맥락 정보(담당, 출고, 야간)
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic: 10:18
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 시스템 권한 없이 출고 기록을 수정할 수 있는 사람이 있습니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 원칙적으로는 없습니다. 다만 관리자 계정 비밀번호가 사무실 게시판에 적혀 있어서, 사실상 야간 근무자 누구나 접근할 수 있었습니다.
+                - paragraph: Reason 핵심 키워드(비밀번호, 계정, 야간) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 5월 중 승인 없이 출고된 건이 있었는지 알고 계십니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 5월 17일 토요일에 고객 긴급 요청이라며 결재 없이 35박스가 출고된 건이 있습니다. 박지현 매니저가 처리했고, 사후 결재를 받겠다고 했는데 전표가 아직 없습니다.
+                - paragraph: Reason 핵심 키워드(결재 없이, 전표, 결재) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: Medium
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 해당 건에 대해 박지현 매니저에게 직접 확인하셨습니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 네, 물어봤는데 본사 영업팀 지시였다고만 했습니다. 어느 담당자인지는 못 들었습니다.
+                - paragraph: Reason 사건 이해에 필요한 맥락 정보(지시, 담당)
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic: 10:31
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: CCTV는 확인해 보셨습니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 적재 구역 CCTV는 5월 중순부터 고장 나 있었습니다. 수리 요청은 4월에 이미 올렸는데 처리가 안 됐습니다.
+                - paragraph: Reason 핵심 키워드(CCTV, 고장) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: Medium
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 창고 출입 기록은 남아 있습니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 출입카드 기록은 남아 있습니다. 5월 17일 저녁에 박지현 매니저와 외부 트럭 기사 한 명이 출입한 기록이 있다고 들었습니다.
+                - paragraph: Reason 사건 이해에 필요한 맥락 정보(기록, 출입)
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 과거에도 비슷한 재고 차이가 있었습니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 작년 11월에 12박스 차이가 한 번 있었는데, 그때는 전산 입력 오류로 확인돼서 정정 처리했습니다.
+                - paragraph: Reason 핵심 키워드(확인, 차이, 전산) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: Medium
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 이번 차이도 입력 오류일 가능성이 있다고 보십니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 72박스면 입력 오류로 보기에는 너무 큽니다. 정확한 원인은 모르겠습니다.
+                - paragraph: Reason 사건 이해에 필요한 맥락 정보(박스)
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic: 10:47
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 마지막으로, 재고 관리 절차에서 개선이 필요하다고 생각하는 부분이 있습니까?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 관리자 계정 공유를 막아야 하고, 긴급 출고도 최소한 당일 전자결재는 받도록 해야 한다고 생각합니다. 그리고 CCTV 수리가 너무 늦어지는 것도 문제입니다.
+                - paragraph: Reason 핵심 키워드(CCTV, 계정, 결재) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 수기 노트에 기록된 사항은?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 재고 차이 72박스, 약 $43,000. 5/29 마감 실사에서 확인
+                - paragraph: Reason 핵심 키워드(확인, 마감, 재고) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 수기 노트에 기록된 사항은?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 5/17(토) 결재 없이 35박스 출고. 박지현 처리, 전표 없음
+                - paragraph: Reason 핵심 키워드(결재 없이, 전표, 결재) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: Medium
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 수기 노트에 기록된 사항은?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 관리자 계정 PW 게시판에 노출. 야간 근무자 전원 접근 가능
+                - paragraph: Reason 사건 이해에 필요한 맥락 정보(계정, 야간, 관리)
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: Medium
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: CCTV 관련 기록 내용은?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 적재 구역 5월 중순부터 고장. 4월에 수리 요청했으나 미처리
+                - paragraph: Reason 사건 이해에 필요한 맥락 정보(고장)
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox
+                  - generic: Low
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 5/17 저녁 출입카드 관련 기록 내용은?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 박지현 + 외부 트럭 기사 1명
+                - paragraph: Reason 배경 설명 또는 부수적 내용
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: Medium
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 수기 노트에 기록된 사항은?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 작년 11월 12박스 차이는 전산 입력 오류로 정정
+                - paragraph: Reason 사건 이해에 필요한 맥락 정보(차이, 전산, 박스)
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: Medium
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 추가 확인 필요 관련 기록 내용은?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 본사 영업팀 지시 여부, 박지현 면담 일정
+                - paragraph: Reason 사건 이해에 필요한 맥락 정보(지시)
+                - generic:
+                  - generic: 1 citation
+              - article:
+                - generic:
+                  - checkbox [checked]:
+                    - generic:
+                      - img
+                  - generic: High
+                  - generic:
+                    - button:
+                      - img
+                      - text: View Source
+                    - button:
+                      - img
+                      - text: Edit
+                - generic:
+                  - generic:
+                    - generic: Q.
+                    - paragraph: 개선 의견 관련 기록 내용은?
+                  - generic:
+                    - generic: A.
+                    - paragraph: 계정 공유 금지, 긴급 출고 당일 전자결재, CCTV 수리 지연 문제
+                - paragraph: Reason 핵심 키워드(CCTV, 계정, 결재) 관련 진술로 사건과 직접 연관됨
+                - generic:
+                  - generic: 1 citation
+  - region "Notifications alt+T":
+    - list:
+      - listitem:
+        - generic:
+          - img
+        - generic:
+          - generic: PPTX downloaded.
+  - alert: FAA | FNS Audit Assistant
+  - dialog "Report Preview" [active] [ref=e1089]:
+    - generic [ref=e1090]:
+      - generic [ref=e1091]:
+        - heading "Report Preview" [level=2] [ref=e1092]
+        - paragraph [ref=e1093]: 18 slides. Review the layout, then download the PPTX file.
+      - button "Back to options" [ref=e1094]:
+        - img
+        - text: Back to options
+    - generic [ref=e1095]:
+      - generic [ref=e1096]:
+        - generic [ref=e1099]:
+          - heading "Moonachie 창고 5월 재고 불일치 Interview Findings" [level=3] [ref=e1100]
+          - paragraph [ref=e1101]: Moonachie 창고 5월 재고 불일치
+          - paragraph [ref=e1102]: Generated Jun 10, 2026
+          - paragraph [ref=e1103]: FNS - New Jersey / Moonachie, FNS - Secaucus, NJ (Temp Annex)
+          - paragraph [ref=e1104]: FAA / FNS Audit Assistant
+        - generic [ref=e1105]: "1"
+      - generic [ref=e1106]:
+        - generic [ref=e1107]:
+          - heading "Incident Context" [level=3] [ref=e1110]
+          - paragraph [ref=e1112]: NJ Moonachie 창고 5월 말 재고 실사에서 전산 1,240박스 대비 실물 1,168박스로 72박스(약 $43,000) 차이 확인. 5/17 무단 출고 의심 건 포함. 야간 시프트 기록 관리 부실 정황.
+        - generic [ref=e1113]: "2"
+      - generic [ref=e1114]:
+        - generic [ref=e1115]:
+          - heading "Interviewee Summary" [level=3] [ref=e1118]
+          - generic [ref=e1120]:
+            - generic [ref=e1121]:
+              - generic [ref=e1122]:
+                - paragraph [ref=e1123]: Interviewee
+                - paragraph [ref=e1124]: 김민수
+              - generic [ref=e1125]:
+                - paragraph [ref=e1126]: Interview date
+                - paragraph [ref=e1127]: Not specified
+              - generic [ref=e1128]:
+                - paragraph [ref=e1129]: Extraction date
+                - paragraph [ref=e1130]: Jun 10, 2026
+              - generic [ref=e1131]:
+                - paragraph [ref=e1132]: Total Q&A
+                - paragraph [ref=e1133]: "20"
+              - generic [ref=e1134]:
+                - paragraph [ref=e1135]: Importance split
+                - paragraph [ref=e1136]: 10 High / 8 Medium / 2 Low
+              - generic [ref=e1137]:
+                - paragraph [ref=e1138]: In report
+                - paragraph [ref=e1139]: 19 of 20
+            - generic [ref=e1140]:
+              - paragraph [ref=e1141]: Source files
+              - list [ref=e1142]:
+                - listitem [ref=e1143]: 김민수_인터뷰_녹취록.txt
+                - listitem [ref=e1144]: 수기노트_김민수_면담.md
+        - generic [ref=e1145]: "3"
+      - generic [ref=e1146]:
+        - generic [ref=e1147]:
+          - heading "Key Findings (1 of 2)" [level=3] [ref=e1150]
+          - list [ref=e1152]:
+            - listitem [ref=e1153]:
+              - generic [ref=e1154]:
+                - generic [ref=e1155]: High
+                - paragraph [ref=e1156]: 5월 말 재고 실사에서 전산 수량과 실물 수량 차이가 얼마나 발생했습니까?
+              - paragraph [ref=e1157]: 전산상으로는 1,240박스인데 실물은 1,168박스였습니다. 72박스 차이가 났고, 금액으로는 약 43,000달러 정도입니다.
+            - listitem [ref=e1158]:
+              - generic [ref=e1159]:
+                - generic [ref=e1160]: High
+                - paragraph [ref=e1161]: 차이를 처음 인지한 시점은 언제입니까?
+              - paragraph [ref=e1162]: 5월 29일 마감 실사 때 처음 확인했습니다. 그 전 주 주간 점검에서는 차이가 없었습니다.
+            - listitem [ref=e1163]:
+              - generic [ref=e1164]:
+                - generic [ref=e1165]: High
+                - paragraph [ref=e1166]: 시스템 권한 없이 출고 기록을 수정할 수 있는 사람이 있습니까?
+              - paragraph [ref=e1167]: 원칙적으로는 없습니다. 다만 관리자 계정 비밀번호가 사무실 게시판에 적혀 있어서, 사실상 야간 근무자 누구나 접근할 수 있었습니다.
+            - listitem [ref=e1168]:
+              - generic [ref=e1169]:
+                - generic [ref=e1170]: High
+                - paragraph [ref=e1171]: 5월 중 승인 없이 출고된 건이 있었는지 알고 계십니까?
+              - paragraph [ref=e1172]: 5월 17일 토요일에 고객 긴급 요청이라며 결재 없이 35박스가 출고된 건이 있습니다. 박지현 매니저가 처리했고, 사후 결재를 받겠다고 했는데 전표가 아직 없습니다.
+            - listitem [ref=e1173]:
+              - generic [ref=e1174]:
+                - generic [ref=e1175]: High
+                - paragraph [ref=e1176]: CCTV는 확인해 보셨습니까?
+              - paragraph [ref=e1177]: 적재 구역 CCTV는 5월 중순부터 고장 나 있었습니다. 수리 요청은 4월에 이미 올렸는데 처리가 안 됐습니다.
+        - generic [ref=e1178]: "4"
+      - generic [ref=e1179]:
+        - generic [ref=e1180]:
+          - heading "Key Findings (2 of 2)" [level=3] [ref=e1183]
+          - list [ref=e1185]:
+            - listitem [ref=e1186]:
+              - generic [ref=e1187]:
+                - generic [ref=e1188]: High
+                - paragraph [ref=e1189]: 과거에도 비슷한 재고 차이가 있었습니까?
+              - paragraph [ref=e1190]: 작년 11월에 12박스 차이가 한 번 있었는데, 그때는 전산 입력 오류로 확인돼서 정정 처리했습니다.
+            - listitem [ref=e1191]:
+              - generic [ref=e1192]:
+                - generic [ref=e1193]: High
+                - paragraph [ref=e1194]: 마지막으로, 재고 관리 절차에서 개선이 필요하다고 생각하는 부분이 있습니까?
+              - paragraph [ref=e1195]: 관리자 계정 공유를 막아야 하고, 긴급 출고도 최소한 당일 전자결재는 받도록 해야 한다고 생각합니다. 그리고 CCTV 수리가 너무 늦어지는 것도 문제입니다.
+            - listitem [ref=e1196]:
+              - generic [ref=e1197]:
+                - generic [ref=e1198]: High
+                - paragraph [ref=e1199]: 수기 노트에 기록된 사항은?
+              - paragraph [ref=e1200]: 재고 차이 72박스, 약 $43,000. 5/29 마감 실사에서 확인
+            - listitem [ref=e1201]:
+              - generic [ref=e1202]:
+                - generic [ref=e1203]: High
+                - paragraph [ref=e1204]: 수기 노트에 기록된 사항은?
+              - paragraph [ref=e1205]: 5/17(토) 결재 없이 35박스 출고. 박지현 처리, 전표 없음
+            - listitem [ref=e1206]:
+              - generic [ref=e1207]:
+                - generic [ref=e1208]: High
+                - paragraph [ref=e1209]: 개선 의견 관련 기록 내용은?
+              - paragraph [ref=e1210]: 계정 공유 금지, 긴급 출고 당일 전자결재, CCTV 수리 지연 문제
+        - generic [ref=e1211]: "5"
+      - generic [ref=e1212]:
+        - generic [ref=e1213]:
+          - heading "Q&A" [level=3] [ref=e1216]
+          - generic [ref=e1218]:
+            - generic [ref=e1219]:
+              - generic [ref=e1220]:
+                - paragraph [ref=e1221]: Q. 안녕하세요. 오늘 인터뷰는 5월 재고 불일치 건 관련입니다. 먼저 본인 업무를 간단히 설명해 주시겠어요?
+                - generic [ref=e1222]: Low
+              - paragraph [ref=e1223]: A. 네, 저는 Moonachie 창고에서 입출고 관리와 재고 실사를 총괄하고 있습니다. 2022년부터 운영팀장을 맡았습니다.
+              - paragraph [ref=e1224]: "출처: 김민수_인터뷰_녹취록.txt, \"네, 저는 Moonachie 창고에서 입출고 관리와 재고 실사를 총괄하고 있습니다. 2022년부터 운영팀장을 맡았습니다.\""
+            - generic [ref=e1225]:
+              - generic [ref=e1226]:
+                - paragraph [ref=e1227]: Q. 5월 말 재고 실사에서 전산 수량과 실물 수량 차이가 얼마나 발생했습니까?
+                - generic [ref=e1228]: High
+              - paragraph [ref=e1229]: A. 전산상으로는 1,240박스인데 실물은 1,168박스였습니다. 72박스 차이가 났고, 금액으로는 약 43,000달러 정도입니다.
+              - paragraph [ref=e1230]: "출처: 김민수_인터뷰_녹취록.txt, \"전산상으로는 1,240박스인데 실물은 1,168박스였습니다. 72박스 차이가 났고, 금액으로는 약 43,000달러 정도입니다.\""
+        - generic [ref=e1231]: "6"
+      - generic [ref=e1232]:
+        - generic [ref=e1233]:
+          - heading "Q&A" [level=3] [ref=e1236]
+          - generic [ref=e1238]:
+            - generic [ref=e1239]:
+              - generic [ref=e1240]:
+                - paragraph [ref=e1241]: Q. 차이를 처음 인지한 시점은 언제입니까?
+                - generic [ref=e1242]: High
+              - paragraph [ref=e1243]: A. 5월 29일 마감 실사 때 처음 확인했습니다. 그 전 주 주간 점검에서는 차이가 없었습니다.
+              - paragraph [ref=e1244]: "출처: 김민수_인터뷰_녹취록.txt, \"5월 29일 마감 실사 때 처음 확인했습니다. 그 전 주 주간 점검에서는 차이가 없었습니다.\""
+            - generic [ref=e1245]:
+              - generic [ref=e1246]:
+                - paragraph [ref=e1247]: Q. 출고 기록은 누가 입력합니까?
+                - generic [ref=e1248]: Medium
+              - paragraph [ref=e1249]: A. 보통은 출고 담당자가 입력하는데, 5월에는 인원이 부족해서 야간 시프트에서는 박지현 매니저가 대신 입력한 경우가 있었습니다.
+              - paragraph [ref=e1250]: "출처: 김민수_인터뷰_녹취록.txt, \"보통은 출고 담당자가 입력하는데, 5월에는 인원이 부족해서 야간 시프트에서는 박지현 매니저가 대신 입력한 경우가 있었습니다.\""
+        - generic [ref=e1251]: "7"
+      - generic [ref=e1252]:
+        - generic [ref=e1253]:
+          - heading "Q&A" [level=3] [ref=e1256]
+          - generic [ref=e1258]:
+            - generic [ref=e1259]:
+              - generic [ref=e1260]:
+                - paragraph [ref=e1261]: Q. 시스템 권한 없이 출고 기록을 수정할 수 있는 사람이 있습니까?
+                - generic [ref=e1262]: High
+              - paragraph [ref=e1263]: A. 원칙적으로는 없습니다. 다만 관리자 계정 비밀번호가 사무실 게시판에 적혀 있어서, 사실상 야간 근무자 누구나 접근할 수 있었습니다.
+              - paragraph [ref=e1264]: "출처: 김민수_인터뷰_녹취록.txt, \"원칙적으로는 없습니다. 다만 관리자 계정 비밀번호가 사무실 게시판에 적혀 있어서, 사실상 야간 근무자 누구나 접근할 수 있었습니다.\""
+            - generic [ref=e1265]:
+              - generic [ref=e1266]:
+                - paragraph [ref=e1267]: Q. 5월 중 승인 없이 출고된 건이 있었는지 알고 계십니까?
+                - generic [ref=e1268]: High
+              - paragraph [ref=e1269]: A. 5월 17일 토요일에 고객 긴급 요청이라며 결재 없이 35박스가 출고된 건이 있습니다. 박지현 매니저가 처리했고, 사후 결재를 받겠다고 했는데 전표가 아직 없습니다.
+              - paragraph [ref=e1270]: "출처: 김민수_인터뷰_녹취록.txt, \"5월 17일 토요일에 고객 긴급 요청이라며 결재 없이 35박스가 출고된 건이 있습니다. 박지현 매니저가 처리했고, 사후 결재를 받겠다고 했는데...\""
+        - generic [ref=e1271]: "8"
+      - generic [ref=e1272]:
+        - generic [ref=e1273]:
+          - heading "Q&A" [level=3] [ref=e1276]
+          - generic [ref=e1278]:
+            - generic [ref=e1279]:
+              - generic [ref=e1280]:
+                - paragraph [ref=e1281]: Q. 해당 건에 대해 박지현 매니저에게 직접 확인하셨습니까?
+                - generic [ref=e1282]: Medium
+              - paragraph [ref=e1283]: A. 네, 물어봤는데 본사 영업팀 지시였다고만 했습니다. 어느 담당자인지는 못 들었습니다.
+              - paragraph [ref=e1284]: "출처: 김민수_인터뷰_녹취록.txt, \"네, 물어봤는데 본사 영업팀 지시였다고만 했습니다. 어느 담당자인지는 못 들었습니다.\""
+            - generic [ref=e1285]:
+              - generic [ref=e1286]:
+                - paragraph [ref=e1287]: Q. CCTV는 확인해 보셨습니까?
+                - generic [ref=e1288]: High
+              - paragraph [ref=e1289]: A. 적재 구역 CCTV는 5월 중순부터 고장 나 있었습니다. 수리 요청은 4월에 이미 올렸는데 처리가 안 됐습니다.
+              - paragraph [ref=e1290]: "출처: 김민수_인터뷰_녹취록.txt, \"적재 구역 CCTV는 5월 중순부터 고장 나 있었습니다. 수리 요청은 4월에 이미 올렸는데 처리가 안 됐습니다.\""
+        - generic [ref=e1291]: "9"
+      - generic [ref=e1292]:
+        - generic [ref=e1293]:
+          - heading "Q&A" [level=3] [ref=e1296]
+          - generic [ref=e1298]:
+            - generic [ref=e1299]:
+              - generic [ref=e1300]:
+                - paragraph [ref=e1301]: Q. 창고 출입 기록은 남아 있습니까?
+                - generic [ref=e1302]: Medium
+              - paragraph [ref=e1303]: A. 출입카드 기록은 남아 있습니다. 5월 17일 저녁에 박지현 매니저와 외부 트럭 기사 한 명이 출입한 기록이 있다고 들었습니다.
+              - paragraph [ref=e1304]: "출처: 김민수_인터뷰_녹취록.txt, \"출입카드 기록은 남아 있습니다. 5월 17일 저녁에 박지현 매니저와 외부 트럭 기사 한 명이 출입한 기록이 있다고 들었습니다.\""
+            - generic [ref=e1305]:
+              - generic [ref=e1306]:
+                - paragraph [ref=e1307]: Q. 과거에도 비슷한 재고 차이가 있었습니까?
+                - generic [ref=e1308]: High
+              - paragraph [ref=e1309]: A. 작년 11월에 12박스 차이가 한 번 있었는데, 그때는 전산 입력 오류로 확인돼서 정정 처리했습니다.
+              - paragraph [ref=e1310]: "출처: 김민수_인터뷰_녹취록.txt, \"작년 11월에 12박스 차이가 한 번 있었는데, 그때는 전산 입력 오류로 확인돼서 정정 처리했습니다.\""
+        - generic [ref=e1311]: "10"
+      - generic [ref=e1312]:
+        - generic [ref=e1313]:
+          - heading "Q&A" [level=3] [ref=e1316]
+          - generic [ref=e1318]:
+            - generic [ref=e1319]:
+              - generic [ref=e1320]:
+                - paragraph [ref=e1321]: Q. 이번 차이도 입력 오류일 가능성이 있다고 보십니까?
+                - generic [ref=e1322]: Medium
+              - paragraph [ref=e1323]: A. 72박스면 입력 오류로 보기에는 너무 큽니다. 정확한 원인은 모르겠습니다.
+              - paragraph [ref=e1324]: "출처: 김민수_인터뷰_녹취록.txt, \"72박스면 입력 오류로 보기에는 너무 큽니다. 정확한 원인은 모르겠습니다.\""
+            - generic [ref=e1325]:
+              - generic [ref=e1326]:
+                - paragraph [ref=e1327]: Q. 마지막으로, 재고 관리 절차에서 개선이 필요하다고 생각하는 부분이 있습니까?
+                - generic [ref=e1328]: High
+              - paragraph [ref=e1329]: A. 관리자 계정 공유를 막아야 하고, 긴급 출고도 최소한 당일 전자결재는 받도록 해야 한다고 생각합니다. 그리고 CCTV 수리가 너무 늦어지는 것도 문제입니다.
+              - paragraph [ref=e1330]: "출처: 김민수_인터뷰_녹취록.txt, \"관리자 계정 공유를 막아야 하고, 긴급 출고도 최소한 당일 전자결재는 받도록 해야 한다고 생각합니다. 그리고 CCTV 수리가 너무 늦어지는 것도...\""
+        - generic [ref=e1331]: "11"
+      - generic [ref=e1332]:
+        - generic [ref=e1333]:
+          - heading "Q&A" [level=3] [ref=e1336]
+          - generic [ref=e1338]:
+            - generic [ref=e1339]:
+              - generic [ref=e1340]:
+                - paragraph [ref=e1341]: Q. 수기 노트에 기록된 사항은?
+                - generic [ref=e1342]: High
+              - paragraph [ref=e1343]: A. 재고 차이 72박스, 약 $43,000. 5/29 마감 실사에서 확인
+              - paragraph [ref=e1344]: "출처: 수기노트_김민수_면담.md, \"재고 차이 72박스, 약 $43,000. 5/29 마감 실사에서 확인\""
+            - generic [ref=e1345]:
+              - generic [ref=e1346]:
+                - paragraph [ref=e1347]: Q. 수기 노트에 기록된 사항은?
+                - generic [ref=e1348]: High
+              - paragraph [ref=e1349]: A. 5/17(토) 결재 없이 35박스 출고. 박지현 처리, 전표 없음
+              - paragraph [ref=e1350]: "출처: 수기노트_김민수_면담.md, \"5/17(토) 결재 없이 35박스 출고. 박지현 처리, 전표 없음\""
+        - generic [ref=e1351]: "12"
+      - generic [ref=e1352]:
+        - generic [ref=e1353]:
+          - heading "Q&A" [level=3] [ref=e1356]
+          - generic [ref=e1358]:
+            - generic [ref=e1359]:
+              - generic [ref=e1360]:
+                - paragraph [ref=e1361]: Q. 수기 노트에 기록된 사항은?
+                - generic [ref=e1362]: Medium
+              - paragraph [ref=e1363]: A. 관리자 계정 PW 게시판에 노출. 야간 근무자 전원 접근 가능
+              - paragraph [ref=e1364]: "출처: 수기노트_김민수_면담.md, \"관리자 계정 PW 게시판에 노출. 야간 근무자 전원 접근 가능\""
+            - generic [ref=e1365]:
+              - generic [ref=e1366]:
+                - paragraph [ref=e1367]: Q. CCTV 관련 기록 내용은?
+                - generic [ref=e1368]: Medium
+              - paragraph [ref=e1369]: A. 적재 구역 5월 중순부터 고장. 4월에 수리 요청했으나 미처리
+              - paragraph [ref=e1370]: "출처: 수기노트_김민수_면담.md, \"적재 구역 5월 중순부터 고장. 4월에 수리 요청했으나 미처리\""
+        - generic [ref=e1371]: "13"
+      - generic [ref=e1372]:
+        - generic [ref=e1373]:
+          - heading "Q&A" [level=3] [ref=e1376]
+          - generic [ref=e1378]:
+            - generic [ref=e1379]:
+              - generic [ref=e1380]:
+                - paragraph [ref=e1381]: Q. 수기 노트에 기록된 사항은?
+                - generic [ref=e1382]: Medium
+              - paragraph [ref=e1383]: A. 작년 11월 12박스 차이는 전산 입력 오류로 정정
+              - paragraph [ref=e1384]: "출처: 수기노트_김민수_면담.md, \"작년 11월 12박스 차이는 전산 입력 오류로 정정\""
+            - generic [ref=e1385]:
+              - generic [ref=e1386]:
+                - paragraph [ref=e1387]: Q. 추가 확인 필요 관련 기록 내용은?
+                - generic [ref=e1388]: Medium
+              - paragraph [ref=e1389]: A. 본사 영업팀 지시 여부, 박지현 면담 일정
+              - paragraph [ref=e1390]: "출처: 수기노트_김민수_면담.md, \"본사 영업팀 지시 여부, 박지현 면담 일정\""
+        - generic [ref=e1391]: "14"
+      - generic [ref=e1392]:
+        - generic [ref=e1393]:
+          - heading "Q&A" [level=3] [ref=e1396]
+          - generic [ref=e1399]:
+            - generic [ref=e1400]:
+              - paragraph [ref=e1401]: Q. 개선 의견 관련 기록 내용은?
+              - generic [ref=e1402]: High
+            - paragraph [ref=e1403]: A. 계정 공유 금지, 긴급 출고 당일 전자결재, CCTV 수리 지연 문제
+            - paragraph [ref=e1404]: "출처: 수기노트_김민수_면담.md, \"계정 공유 금지, 긴급 출고 당일 전자결재, CCTV 수리 지연 문제\""
+        - generic [ref=e1405]: "15"
+      - generic [ref=e1406]:
+        - generic [ref=e1407]:
+          - 'heading "Appendix: Selected Q&A (1 of 3)" [level=3] [ref=e1410]'
+          - list [ref=e1412]:
+            - listitem [ref=e1413]:
+              - generic [ref=e1414]: "1."
+              - generic [ref=e1415]: 안녕하세요. 오늘 인터뷰는 5월 재고 불일치 건 관련입니다. 먼저 본인 업무를 간단히 설명해 주시겠어요?
+            - listitem [ref=e1416]:
+              - generic [ref=e1417]: "2."
+              - generic [ref=e1418]: 5월 말 재고 실사에서 전산 수량과 실물 수량 차이가 얼마나 발생했습니까?
+            - listitem [ref=e1419]:
+              - generic [ref=e1420]: "3."
+              - generic [ref=e1421]: 차이를 처음 인지한 시점은 언제입니까?
+            - listitem [ref=e1422]:
+              - generic [ref=e1423]: "4."
+              - generic [ref=e1424]: 출고 기록은 누가 입력합니까?
+            - listitem [ref=e1425]:
+              - generic [ref=e1426]: "5."
+              - generic [ref=e1427]: 시스템 권한 없이 출고 기록을 수정할 수 있는 사람이 있습니까?
+            - listitem [ref=e1428]:
+              - generic [ref=e1429]: "6."
+              - generic [ref=e1430]: 5월 중 승인 없이 출고된 건이 있었는지 알고 계십니까?
+            - listitem [ref=e1431]:
+              - generic [ref=e1432]: "7."
+              - generic [ref=e1433]: 해당 건에 대해 박지현 매니저에게 직접 확인하셨습니까?
+            - listitem [ref=e1434]:
+              - generic [ref=e1435]: "8."
+              - generic [ref=e1436]: CCTV는 확인해 보셨습니까?
+        - generic [ref=e1437]: "16"
+      - generic [ref=e1438]:
+        - generic [ref=e1439]:
+          - 'heading "Appendix: Selected Q&A (2 of 3)" [level=3] [ref=e1442]'
+          - list [ref=e1444]:
+            - listitem [ref=e1445]:
+              - generic [ref=e1446]: "9."
+              - generic [ref=e1447]: 창고 출입 기록은 남아 있습니까?
+            - listitem [ref=e1448]:
+              - generic [ref=e1449]: "10."
+              - generic [ref=e1450]: 과거에도 비슷한 재고 차이가 있었습니까?
+            - listitem [ref=e1451]:
+              - generic [ref=e1452]: "11."
+              - generic [ref=e1453]: 이번 차이도 입력 오류일 가능성이 있다고 보십니까?
+            - listitem [ref=e1454]:
+              - generic [ref=e1455]: "12."
+              - generic [ref=e1456]: 마지막으로, 재고 관리 절차에서 개선이 필요하다고 생각하는 부분이 있습니까?
+            - listitem [ref=e1457]:
+              - generic [ref=e1458]: "13."
+              - generic [ref=e1459]: 수기 노트에 기록된 사항은?
+            - listitem [ref=e1460]:
+              - generic [ref=e1461]: "14."
+              - generic [ref=e1462]: 수기 노트에 기록된 사항은?
+            - listitem [ref=e1463]:
+              - generic [ref=e1464]: "15."
+              - generic [ref=e1465]: 수기 노트에 기록된 사항은?
+            - listitem [ref=e1466]:
+              - generic [ref=e1467]: "16."
+              - generic [ref=e1468]: CCTV 관련 기록 내용은?
+        - generic [ref=e1469]: "17"
+      - generic [ref=e1470]:
+        - generic [ref=e1471]:
+          - 'heading "Appendix: Selected Q&A (3 of 3)" [level=3] [ref=e1474]'
+          - list [ref=e1476]:
+            - listitem [ref=e1477]:
+              - generic [ref=e1478]: "17."
+              - generic [ref=e1479]: 수기 노트에 기록된 사항은?
+            - listitem [ref=e1480]:
+              - generic [ref=e1481]: "18."
+              - generic [ref=e1482]: 추가 확인 필요 관련 기록 내용은?
+            - listitem [ref=e1483]:
+              - generic [ref=e1484]: "19."
+              - generic [ref=e1485]: 개선 의견 관련 기록 내용은?
+        - generic [ref=e1486]: "18"
+    - generic [ref=e1084]:
+      - button "Back" [ref=e1487]
+      - button "Download PPTX" [ref=e1488]:
+        - img
+        - text: Download PPTX
+    - button "Close" [ref=e1087]:
+      - img
+      - generic [ref=e1088]: Close
