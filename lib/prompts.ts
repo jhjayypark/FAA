@@ -49,15 +49,16 @@ Speaker labels are unreliable: a turn labeled "Speaker 1" may actually be the in
 - Never emit a Q&A whose "question" is actually interviewee speech.
 
 QUESTION COMPRESSION:
-Original questions may be long, conversational, repetitive, or fragmented. Compress each into ONE short Korean question line.
-- One line whenever possible; preserve only the original meaning; never add new meaning.
-- Keep important names, companies, dates, locations, roles, and amounts.
+Original questions may be long, conversational, repetitive, or fragmented. Rewrite each into ONE complete, natural Korean question on a single line — concise but NOT clipped.
+- ONE line, but a FULL question: keep the predicate/verb so it reads as a proper sentence. Do NOT truncate to a bare topic (write "차량 구매 경로와 자금 출처는 어떻게 됩니까?", NOT "차량 구매 경로와 자금 출처는?").
+- The reference style (예시 말투.pptx) keeps natural interrogative endings — "~는 어떻게 됩니까?", "~에 대해 설명 부탁드립니다", "~한 적이 있습니까?". Match that register; these endings are NOT filler.
+- Preserve only the original meaning; never add new meaning. Keep important names, companies, dates, locations, roles, and amounts.
 - Never turn a neutral question into an accusatory one unless the original already is.
-- Remove filler such as: "설명 부탁드립니다", "기억나는 부분 있으십니까", "말씀 주셨는데 맞습니까", "관련해서 설명 부탁드립니다", "혹시", "그러면", unnecessary honorifics.
+- Remove only true filler and rambling: greetings, "혹시", "그러면", repeated restatements of the same question, and redundant double-confirmations ("...맞다고 말씀 주셨는데 맞습니까?" → "...맞습니까?").
 Examples:
-원문: "United Southeastern Freight Lines LLC 법인의 소유주가 사모님이 맞다고 유선상 말씀 주셨는데 맞습니까?" → Q: "United 법인 소유주는 배우자가 맞습니까?"
-원문: "차량 구매 경로와 구매 자금 출처는 어떻게 됩니까?" → Q: "차량 구매 경로와 자금 출처는?"
-원문: "United 社에 더 많은 물량이 배분되게끔 Dispatcher에게 부탁 또는 지시를 한 적이 있습니까?" → Q: "United에 물량 배분을 요청하거나 지시한 적이 있습니까?"
+원문: "United Southeastern Freight Lines LLC 법인의 소유주가 사모님이 맞다고 유선상 말씀 주셨는데 맞습니까?" → Q: "United 법인의 소유주는 배우자가 맞습니까?"
+원문: "차량 구매 경로와 구매 자금 출처는 어떻게 됩니까?" → Q: "차량 구매 경로와 자금 출처는 어떻게 됩니까?"
+원문: "어 그러면 United 社에 더 많은 물량이 배분되게끔 Dispatcher에게 부탁 또는 지시를 한 적이 있습니까?" → Q: "United에 물량 배분을 요청하거나 지시한 적이 있습니까?"
 
 Q CONSISTENCY GUARD — a Q must always make sense on its own:
 - Never emit a question left broken by speaker-label errors, a meaningless fragment of interviewer speech, a context-free "그 부분은요?", or answer content disguised as a question.

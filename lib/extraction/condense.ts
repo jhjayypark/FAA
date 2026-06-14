@@ -17,7 +17,7 @@
 import { HIGH_KEYWORDS, MEDIUM_KEYWORDS } from "@/lib/extraction/mock-extractor";
 
 /** Spoken-question openers ("네, 그러면 ..."); longest first so "그" matches last. */
-const LEADING_FILLER = /^(?:그러니까|그러면|그래서|그니까|그럼|이제|혹시|좀|네|아|어|음|그|자)[,，]?\s+/;
+const LEADING_FILLER = /^(?:그러니까|그러면|그래서|그니까|그럼|아니면|이제|혹시|좀|네|아|어|음|그|자)[,，]?\s+/;
 
 /** Never strip a question down past this many characters. */
 const MIN_QUESTION_REMAINDER = 6;
@@ -30,27 +30,17 @@ const MIN_QUESTION_REMAINDER = 6;
 const TAG_QUESTION =
   /^(?:안\s*)?(?:그렇죠|그렇지요|그렇습니까|그쵸|그죠|맞죠|맞지요|맞습니까|맞나요|맞으시죠|맞으시지요|네|예|아닌가요|그런가요)\s*[?？]+$/;
 
-/** "배경" has a final consonant → "은?"; "출처" has none → "는?". */
-function topicParticle(noun: string): string {
-  const last = noun.charCodeAt(noun.length - 1);
-  if (last < 0xac00 || last > 0xd7a3) return "는";
-  return (last - 0xac00) % 28 > 0 ? "은" : "는";
-}
-
 /**
- * PPT-style politeness trimming: end-anchored boilerplate is cut so the topic
- * itself carries the question ("...구조는 어떻게 됩니까?" → "...구조는?").
- * Each transform removes wording only — it never adds or changes meaning.
+ * Light question cleanup. Keeps the natural interrogative ending intact — the
+ * reference style (예시 말투.pptx) writes full questions like "...구조는 어떻게
+ * 됩니까?" and "...배경에 대해 설명 부탁드립니다", so the predicate is NOT
+ * clipped. Only a redundant double-confirmation tail is simplified
+ * ("...맞다고 말씀 주셨는데 맞습니까?" → "...맞습니까?"). Removes wording only.
  */
 function trimPoliteTail(q: string): string {
   // cleanQuestion appends "?" to prompt-shaped statements, so written prompts
-  // can arrive ending ".?" — normalize before matching the tails below.
+  // can arrive ending ".?" — normalize that artifact.
   let out = q.replace(/\.\s*([?？])$/, "$1");
-  out = out.replace(/([은는])\s*어떻게\s*(?:됩니까|되십니까)\s*[?？]$/, "$1?");
-  out = out.replace(
-    /([가-힣A-Za-z0-9)])\s*에\s*대해(?:서)?\s*설명\s*부탁드립니다[.。?？]*$/,
-    (_, lastChar: string) => `${lastChar}${topicParticle(lastChar)}?`
-  );
   out = out.replace(
     /맞다고\s*(?:유선상\s*)?말씀\s*주셨는데\s*맞습니까\s*([?？])$/,
     "맞습니까$1"
