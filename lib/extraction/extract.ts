@@ -83,11 +83,25 @@ export async function extractInterviewInsights(input: ExtractInput): Promise<Ext
     onProgress?.(STAGES[i], Math.round((i / STAGES.length) * 100));
     await sleep(350);
   }
-  onProgress?.(STAGES[2], 40);
 
-  const llmResult = await runLLMExtraction(input);
+  // The LLM call can run for a minute or more on a long transcript. Without a
+  // ticker the bar would sit frozen at 40% and look hung, so creep it forward
+  // toward 90% while the request is in flight; completion snaps it to 100%.
+  let pct = 40;
+  onProgress?.(STAGES[2], pct);
+  const ticker = setInterval(() => {
+    pct = Math.min(pct + 2, 90);
+    onProgress?.(pct < 70 ? STAGES[2] : STAGES[3], pct);
+  }, 1500);
 
-  onProgress?.(STAGES[3], 75);
+  let llmResult: ExtractionResult | null;
+  try {
+    llmResult = await runLLMExtraction(input);
+  } finally {
+    clearInterval(ticker);
+  }
+
+  onProgress?.(STAGES[3], Math.max(pct, 92));
   const result = llmResult ?? runMockExtraction(input);
 
   onProgress?.(STAGES[STAGES.length - 1], 100);
